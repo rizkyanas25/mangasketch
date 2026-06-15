@@ -30,6 +30,9 @@ export const STANDARD_ERRORS = [
   'AI_TIMEOUT',
   'AI_PROVIDER_ERROR',
   'RATE_LIMITED',
+  'UNAUTHORIZED',
+  'INVALID_SKETCH_ID',
+  'SKETCH_NOT_FOUND',
   'UNKNOWN_ERROR'
 ] as const;
 export type ApiErrorCode = typeof STANDARD_ERRORS[number];

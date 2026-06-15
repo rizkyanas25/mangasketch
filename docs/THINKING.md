@@ -110,6 +110,11 @@ sketches table:
 - Sketchbook query: group by root parent, show latest version, **cursor-based pagination** (load more as user scroll)
 - Detail query: get all rows where `id = X` or `parent_id = X`, order by `created_at DESC`
 
+- **[UPDATED ON DEVELOPMENT]**: 
+  - To avoid complex recursive PostgreSQL queries, I implement a **flat-tree structure** where all variations point directly to the original root parent sketch (`parent_id = root parent id`). This is resolved dynamically in the backend using `getRootParentId()`.
+  - Sketchbook query simply fetches all sketches for the user sorted by latest (`created_at DESC`).
+  - Detail query retrieves the parent and all variations (`id = rootId OR parent_id = rootId`) sorted chronologically (`created_at ASC`) to render version sequence correctly in the UI.
+
 ### Safety Architecture (PG-13 Guardrails)
 
 To prevent abuse (NSFW, hate speech, explicit content) while keeping action-oriented manga concepts (like sword fights, magic, and monsters) unblocked, we implement a 2-layer safety system:
@@ -147,6 +152,18 @@ Backend receive request
      ├── Too many requests from anonymous user? (>5/hour)
      │     └── Return 429: RATE_LIMITED
      │         Frontend show: "Too many requests. Please wait."
+     │
+     ├── **[UPDATED ON DEVELOPMENT]** - GET /api/sketches (No auth token)?
+     │     └── Return 401: UNAUTHORIZED
+     │         Frontend show: "You must be logged in to view your sketchbook."
+     │
+     ├── **[UPDATED ON DEVELOPMENT]** - GET /api/sketches/:id (Invalid UUID format)?
+     │     └── Return 400: INVALID_SKETCH_ID
+     │         Frontend show: "Invalid sketch ID format."
+     │
+     ├── **[UPDATED ON DEVELOPMENT]** - GET /api/sketches/:id (Sketch not found or not own by user)?
+     │     └── Return 404: SKETCH_NOT_FOUND
+     │         Frontend show: "Sketch not found or access denied."
      │
      └── Network/server down?
            └── Frontend catch network error
@@ -193,6 +210,17 @@ I start with Pollinations as primary AI provider because:
 That said, during development I might switch to **Gemini Flash Image API** if Pollinations doesnt produce good enough manga-style output. The backend is designed so that swapping AI provider only require changing one service file, not the whole app. This is intentional because in real project, AI providers can change anytime due to pricing, quality, or reliability issues.
 
 Both providers require API key, so setup complexity is similar. The decision will come down to which one produce better manga sketch output during testing.
+
+- **[UPDATED ON DEVELOPMENT]**:
+  - I use **Z-Image Turbo** (`zimage`) as the default model. It gives very fast generation (75 images/hour on Seed tier) and does not have native AI watermarks.
+  - To guarantee a pure black-and-white output and eliminate color leakage, I programmatically convert the image buffer to grayscale using the **Sharp** library before applying the watermark.
+
+### Hanko Stamp Watermark
+- **[UPDATED ON DEVELOPMENT]**: 
+  - I added a traditional Japanese hanko stamp watermark to sketches to make them feel authentic like they were made by a real manga artist.
+  - The watermark is a red stamp with Katakana text `マンガスケッチ` and user initials (optional, max 4 chars). It is always generated and applied by the backend using `sharp`.
+
+
 
 ### Monorepo Structure
 

@@ -198,6 +198,7 @@ describe('Sketches API Routes', () => {
     it('should return 401 if user is not authenticated', async () => {
       const res = await request(app).get('/api/sketches');
       expect(res.status).toBe(401);
+      expect(res.body.code).toBe('UNAUTHORIZED');
       expect(res.body.message).toContain('logged in');
     });
 
@@ -218,6 +219,7 @@ describe('Sketches API Routes', () => {
     it('should return 401 if user is not authenticated', async () => {
       const res = await request(app).get('/api/sketches/11111111-1111-1111-1111-111111111111');
       expect(res.status).toBe(401);
+      expect(res.body.code).toBe('UNAUTHORIZED');
       expect(res.body.message).toContain('logged in');
     });
 
@@ -227,6 +229,7 @@ describe('Sketches API Routes', () => {
         .set('Authorization', 'Bearer valid-token');
 
       expect(res.status).toBe(400);
+      expect(res.body.code).toBe('INVALID_SKETCH_ID');
       expect(res.body.message).toContain('Invalid sketch ID format');
     });
 
@@ -236,6 +239,7 @@ describe('Sketches API Routes', () => {
         .set('Authorization', 'Bearer valid-token');
 
       expect(res.status).toBe(404);
+      expect(res.body.code).toBe('SKETCH_NOT_FOUND');
       expect(res.body.message).toContain('not found or access denied');
     });
 

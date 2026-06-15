@@ -227,7 +227,7 @@ router.get('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
-        code: 'UNKNOWN_ERROR',
+        code: 'UNAUTHORIZED',
         message: 'You must be logged in to view your sketchbook.'
       });
     }
@@ -248,7 +248,7 @@ router.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user) {
       return res.status(401).json({
-        code: 'UNKNOWN_ERROR',
+        code: 'UNAUTHORIZED',
         message: 'You must be logged in to view sketch details.'
       });
     }
@@ -256,7 +256,7 @@ router.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
     const { id } = req.params;
     if (!UUID_REGEX.test(id)) {
       return res.status(400).json({
-        code: 'UNKNOWN_ERROR',
+        code: 'INVALID_SKETCH_ID',
         message: 'Invalid sketch ID format.'
       });
     }
@@ -266,7 +266,7 @@ router.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
   } catch (error: any) {
     if (error.message === 'SKETCH_NOT_FOUND') {
       return res.status(404).json({
-        code: 'UNKNOWN_ERROR',
+        code: 'SKETCH_NOT_FOUND',
         message: 'Sketch not found or access denied.'
       });
     }
