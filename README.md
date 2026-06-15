@@ -37,6 +37,20 @@ npm run dev
 # Backend: http://localhost:3001
 ```
 
+### 🗄️ Database & Storage Setup (Supabase)
+
+To replicate the database and storage on your Supabase instance:
+
+1. **Database Schema**:
+   * Go to **SQL Editor** in your Supabase dashboard.
+   * Open a new query, paste the contents of [supabase/schema.sql](./supabase/schema.sql), and click **Run** to create the `sketches` table and configure Row Level Security (RLS) policies.
+2. **Storage Bucket**:
+   * Go to **Storage** in Supabase and click **New Bucket**.
+   * Name it **`sketches`** and toggle **Public** to `ON`.
+3. **Authentication**:
+   * Go to **Authentication** -> **Providers** and enable **Google**.
+   * Configure your Google Client ID and Secret (Google Cloud Console).
+
 ---
 
 ## 🎨 Features
@@ -100,7 +114,7 @@ See [.env.example](.env.example) for all required variables.
 | Variable | Description |
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (backend only) |
 | `POLLINATIONS_API_KEY` | Pollinations.ai secret key |
 | `GEMINI_API_KEY` | Gemini API key (if using Gemini as provider) |
