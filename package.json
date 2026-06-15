@@ -1,0 +1,14 @@
+{
+  "name": "mangasketch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered manga sketch generator",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/server & npm run dev --workspace=apps/web",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:server": "npm run dev --workspace=apps/server"
+  }
+}
