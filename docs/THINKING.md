@@ -25,7 +25,7 @@ User Browser
      │
      ├── 2. Frontend send POST request to backend
      │      POST /api/sketches
-     │      Body: { prompt, mangaStyle, drawingStyle }
+     │      Body: { prompt, mangaStyle, drawingStyle, watermarkText?, watermarkPosition? }
      │      Header: Authorization: Bearer <jwt> (if logged in)
      │
      ▼
@@ -49,10 +49,10 @@ Express Backend (Railway)
      │      ├── YES (logged in):
      │      │     ├── Upload image to Supabase Storage
      │      │     ├── Save metadata to PostgreSQL (prompt, mangaStyle, drawingStyle, seed, image_url, user_id)
-     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, seed, image_url, saved: true }
+     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, seed, image_url, saved: true, watermarkText?, watermarkPosition? }
      │      │
      │      └── NO (anonymous):
-     │            └── Return { prompt, mangaStyle, drawingStyle, seed, image_data: base64, saved: false }
+     │            └── Return { prompt, mangaStyle, drawingStyle, seed, image_url: base64, saved: false, watermarkText?, watermarkPosition? }
      │
      ▼
 User Browser
