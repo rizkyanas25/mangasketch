@@ -33,3 +33,7 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+
+# Scratch / Temp development assets
+scratch/
+
