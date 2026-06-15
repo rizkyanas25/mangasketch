@@ -1,0 +1,490 @@
+# MangaSketch - Design Language
+
+> This document defines the visual language for MangaSketch. The goal is to make the web app feel like a digital manga sketchbook that came to life.
+
+Reference: Stitch project "MangaSketch AI Generator"
+
+---
+
+## Design Philosophy
+
+The interface should feel like opening a professional mangaka's draft book. Every element, from buttons to cards to loading states, should feel hand-crafted with ink on paper. The aesthetic is **Neo-Brutalist Manga** with strict black-and-white palette, screentone textures, and angular panel-inspired layouts.
+
+Key principle: **the niche shapes the product**. This is not a generic AI tool with a manga label. The entire UI language speaks manga.
+
+---
+
+## Color Palette
+
+Strictly black and white. No color accents except for destructive actions (red).
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `primary` | `#000000` | Text, borders, filled buttons, ink elements |
+| `secondary` | `#FFFFFF` | Backgrounds, inverted text, card surfaces |
+| `neutral` | `#767676` | Muted text, secondary labels, disabled states |
+| `neutral-light` | `#E5E5E5` | Borders, dividers, subtle separators |
+| `neutral-lighter` | `#F5F5F5` | Background tints, card hover states |
+| `screentone` | `dot pattern overlay` | Mid-tone texture, background depth |
+| `destructive` | `#DC2626` | Delete actions only |
+
+### Screentone Patterns
+
+Instead of flat grays for mid-tones, use manga-style screentone dot patterns. Apply as CSS background patterns or SVG overlays on:
+- Hero section background
+- Empty state areas
+- Card hover states
+- Section dividers
+
+---
+
+## Typography
+
+Three-font system that balances impact, readability, and technical precision.
+
+| Role | Font | Weight | Usage |
+|------|------|--------|-------|
+| **Headline** | Anton | 400 (regular) | Page titles, hero text, dramatic headings. Always uppercase. |
+| **Body** | Libre Franklin | 400, 500, 600 | Body text, descriptions, prompt text, UI labels |
+| **Label/Mono** | Space Mono | 400, 700 | Technical data, prompt display, metadata, timestamps |
+
+### Scale
+
+| Token | Size | Line Height | Font | Usage |
+|-------|------|-------------|------|-------|
+| `display` | 48px | 52px | Anton | Hero heading |
+| `display-mobile` | 32px | 36px | Anton | Hero heading (mobile) |
+| `heading-lg` | 32px | 36px | Anton | Page titles ("MY SKETCHBOOK") |
+| `heading-md` | 24px | 28px | Anton | Section titles |
+| `heading-sm` | 18px | 24px | Libre Franklin 600 | Card titles, sub-sections |
+| `body-lg` | 16px | 24px | Libre Franklin 400 | Primary body text |
+| `body-md` | 14px | 20px | Libre Franklin 400 | Secondary body text |
+| `body-sm` | 12px | 16px | Libre Franklin 400 | Captions, timestamps |
+| `mono-md` | 14px | 20px | Space Mono 400 | Prompt display, metadata |
+| `mono-sm` | 12px | 16px | Space Mono 400 | Technical labels, badges |
+
+---
+
+## Layout
+
+### Navigation (Simplified from Stitch)
+
+**Top navbar only, no sidebar.** Simpler to build, simpler to use.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  MANGASKETCH          GALLERY          [Create] [Login]  │
+└─────────────────────────────────────────────────────────┘
+```
+
+- Logo "MANGASKETCH" in Anton, uppercase, left aligned
+- "GALLERY" link, center or next to logo
+- "Create" button (primary, filled black) right side
+- "Login" / user avatar, far right
+- No: Tools, Drafts, Assets, Settings
+
+### Page Structure
+
+All pages use a centered container with max-width 1200px.
+
+```
+Outer background: white (#FFFFFF) with subtle screentone texture
+├── Navbar (full width, white bg, black bottom border 2px)
+├── Content container (max-width: 1200px, centered)
+│   └── Page content
+└── No footer needed (minimal)
+```
+
+### Spacing Scale (8px base)
+
+| Token | Value |
+|-------|-------|
+| `space-xs` | 4px |
+| `space-sm` | 8px |
+| `space-md` | 16px |
+| `space-lg` | 24px |
+| `space-xl` | 32px |
+| `space-2xl` | 48px |
+| `space-3xl` | 64px |
+
+---
+
+## Components
+
+### Buttons
+
+4 variants from the design system:
+
+| Variant | Background | Border | Text | Usage |
+|---------|-----------|--------|------|-------|
+| **Primary** | `#000000` | none | `#FFFFFF` | "GENERATE PANEL", main actions |
+| **Secondary** | `#FFFFFF` | 2px solid `#000000` | `#000000` | Secondary actions |
+| **Inverted** | `#FFFFFF` | none | `#000000` | Actions on dark backgrounds |
+| **Outlined** | transparent | 1px solid `#767676` | `#767676` | Tertiary/subtle actions |
+
+All buttons:
+- No border radius (0px, sharp corners)
+- Uppercase text in Libre Franklin 600 or Anton
+- Padding: 12px 24px
+- Hover: invert colors (primary becomes white bg + black text)
+- Active: slight scale down (transform: scale(0.98))
+
+### "GENERATE PANEL" Button (Special)
+
+The main generate button should be extra dramatic:
+- Full width of the form area
+- Larger padding (16px 32px)
+- Anton font, uppercase
+- Pencil/pen icon before text
+- Black background, white text
+
+### Cards (Manga Panels)
+
+Gallery cards look like manga panels:
+
+```
+┌──────────────────────────┐  <- 2px solid black border
+│                          │
+│      [Image Area]        │
+│                          │
+├──────────────────────────┤  <- 1px divider
+│ CYBERPUNK    OCT 19,2023 │  <- Style badge + date in Space Mono
+│                          │
+│ "Ronin samurai standing  │  <- Prompt text in Libre Franklin
+│  under a dead cherry..." │
+│                          │
+│ DETAILS        ♡    ↗    │  <- Actions
+└──────────────────────────┘
+```
+
+- Border: 2px solid black
+- Border radius: 0px (sharp corners)
+- Background: white
+- Image aspect ratio: 3:4 (portrait, manga proportion)
+- Hover: subtle screentone overlay or slight shadow offset
+
+### Style Preset Chips
+
+Manga-style toggle chips for selecting art style:
+
+```
+[■ SHONEN]  [□ SEINEN]  [□ SHOJO]  [□ DARK FANTASY]  [□ CYBERPUNK]
+```
+
+- Selected: black fill, white text
+- Unselected: white fill, black border 2px, black text
+- No border radius
+- Space Mono font, uppercase
+- Padding: 8px 16px
+
+### Prompt Input
+
+Large textarea that looks like it belongs in a sketchbook:
+
+```
+┌─────────────────────────────────────────────┐
+│ DESCRIBE YOUR PANEL SCENE...                │  <- Placeholder in Space Mono
+│                                             │
+│                                             │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+- Border: 2px solid black
+- No border radius
+- Font: Libre Franklin 400, 16px
+- Placeholder: Space Mono, uppercase, #767676
+- Focus state: border stays 2px, add subtle black outer shadow (0 0 0 2px black)
+- Min height: 120px
+
+### Search Input
+
+```
+┌──────────────────────────┐
+│ 🔍 Search                │
+└──────────────────────────┘
+```
+
+- Border: 1px solid #767676
+- No border radius
+- Libre Franklin font
+
+---
+
+## Pages
+
+### 1. Home / Generate Page (`/`)
+
+**Simplified from Stitch**: No sidebar, top navbar only.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  MANGASKETCH          GALLERY          [Create] [Login]  │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─── screentone bg ──────────────────────────────────┐ │
+│  │                                                     │ │
+│  │   TURN YOUR MANGA IDEAS INTO                        │ │
+│  │   VISUAL CONCEPTS IN SECONDS                        │ │
+│  │                                                     │ │
+│  │   Visualizer for mangaka. Sketch layouts,           │ │
+│  │   character designs, tonal ink and screentone.      │ │
+│  │                                                     │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │ DESCRIBE YOUR PANEL SCENE...                        │ │
+│  │                                                     │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│  [■ SHONEN] [□ SEINEN] [□ SHOJO] [□ DARK FANTASY]      │
+│                                                         │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │            ✏️  GENERATE PANEL                        │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │                                                     │ │
+│  │           YOUR PANELS WILL APPEAR HERE              │ │
+│  │                                                     │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│  (anonymous users see:)                                 │
+│  ┌─────────────────────────────────────────────────────┐ │
+│  │  🔒 Login to save this to your sketchbook           │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 2. Gallery Page (`/gallery`)
+
+**Naming: "MY SKETCHBOOK"** (from Stitch design)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  MANGASKETCH          GALLERY          [Create] [@]      │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  MY SKETCHBOOK                          [Recent ▼]      │
+│  A collection of generated panels crafted               │
+│  with G-pen precision.                                  │
+│                                                         │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │
+│  │         │  │         │  │         │  │         │   │
+│  │  img    │  │  img    │  │  img    │  │  img    │   │
+│  │         │  │         │  │         │  │         │   │
+│  ├─────────┤  ├─────────┤  ├─────────┤  ├─────────┤   │
+│  │ SHONEN  │  │ SEINEN  │  │ SHOJO   │  │ MECHA   │   │
+│  │ "Ronin  │  │ "Quiet  │  │ "Girl   │  │ "Giant  │   │
+│  │  samu.. │  │  morni..│  │  in co..│  │  robot..│   │
+│  │ DETAILS │  │ DETAILS │  │ DETAILS │  │ DETAILS │   │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │
+│                                                         │
+│              INKING MORE PANELS...                      │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+- 4 columns on desktop, 2 on tablet, 1 on mobile
+- Cards use manga panel style (thick black border, no radius)
+- Infinite scroll with "INKING MORE PANELS..." text
+- Empty state: manga illustration + "No sketches yet. Start creating!"
+
+### 3. Detail Page (`/gallery/[id]`)
+
+**Simplified from Stitch**: Remove stroke weight slider, screentone density selector, production data. Keep: image, prompt, re-generate form, version history.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  MANGASKETCH          GALLERY          [Create] [@]      │
+├─────────────────────────────────────────────────────────┤
+│  ← BACK TO SKETCHBOOK                                   │
+│  PANEL #042                                             │
+│                                                         │
+│  ┌───────────────────┐  ┌──────────────────────────┐    │
+│  │                   │  │ MANGAKA PROMPT            │    │
+│  │                   │  │                           │    │
+│  │                   │  │ "Cybernetic samurai       │    │
+│  │    [Main Image]   │  │  standing in rain,        │    │
+│  │                   │  │  tokyo skyline..."        │    │
+│  │                   │  │                           │    │
+│  │                   │  │ [CYBERPUNK] [HALFTONE]    │    │
+│  │                   │  ├──────────────────────────┤    │
+│  │                   │  │ ✏️ RE-INK PANEL           │    │
+│  │                   │  │                           │    │
+│  │                   │  │ [Edit prompt area...]     │    │
+│  │                   │  │                           │    │
+│  │                   │  │ [■ SHONEN] [□ SEINEN]     │    │
+│  └───────────────────┘  │                           │    │
+│                         │ [REGENERATE PANEL]        │    │
+│  Created: Oct 12, 2023  └──────────────────────────┘    │
+│                                                         │
+│  INKING PROCESS (version history)                       │
+│  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐       │
+│  │ v01    │  │ v02    │  │ v03    │  │ v04 ★  │       │
+│  │ rough  │  │ clean  │  │ lines  │  │ final  │       │
+│  └────────┘  └────────┘  └────────┘  └────────┘       │
+└─────────────────────────────────────────────────────────┘
+```
+
+- Two column layout: image left, prompt + re-generate right
+- "INKING PROCESS" section shows version history (horizontal scroll)
+- Current version marked with ★
+- Click on any version to load that prompt
+
+---
+
+## States
+
+### Loading State: "Sketching your idea..."
+
+From the Stitch design, the loading state should feel like watching an artist draw.
+
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│            ✏️ (pen animation)            │
+│                                         │
+│        Sketching your idea...           │  <- Libre Franklin italic
+│                                         │
+│   REFINING INK STROKES...              │  <- Space Mono, muted
+│                                         │
+│   "Patience is the tool of the         │  <- Quote, subtle
+│    master mangaka."                     │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+- Animated pen/pencil icon (CSS animation)
+- Progress text that changes: "Sketching...", "Refining ink strokes...", "Adding screentone..."
+- Optional manga quote for long waits
+- Disable generate button during loading
+
+### Error States: Manga Drama Panels
+
+Each error is a dramatic manga panel:
+
+**Invalid Prompt (empty/too long)**
+```
+┌─────────────────────────────────────────┐
+│         ⚠️                               │
+│                                         │
+│   BLANK PAGE!                           │  <- Anton, dramatic
+│                                         │
+│   Every great manga starts with        │
+│   a prompt. Please describe your        │
+│   scene.                                │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**API Timeout**
+```
+┌─────────────────────────────────────────┐
+│         💀                               │
+│                                         │
+│   CONNECTION SEVERED!                   │  <- Anton, dramatic
+│                                         │
+│   The ink has dried up. The server      │
+│   is not responding.                    │
+│                                         │
+│   [RETRY]                              │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+**Broken Response / Data Corruption**
+```
+┌─────────────────────────────────────────┐
+│         💔                               │
+│                                         │
+│   DATA CORRUPTION                       │  <- Anton, dramatic
+│                                         │
+│   Inconsistent panel generated.         │
+│   The drawing board is distorted.       │
+│                                         │
+│   [SCRAP DRAFT]                        │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## Manga-Specific Naming Convention
+
+Use manga/mangaka terminology throughout the UI instead of generic tech terms:
+
+| Generic Term | MangaSketch Term |
+|---|---|
+| Generate | **Generate Panel** |
+| Re-generate | **Re-ink Panel** |
+| Gallery | **My Sketchbook** |
+| Image | **Panel** |
+| Loading | **Sketching your idea...** |
+| Infinite scroll loading | **Inking more panels...** |
+| Version history | **Inking Process** |
+| Prompt | **Mangaka Prompt** |
+| Style presets | **Ink Style** |
+| Save | **Save to Sketchbook** |
+| Detail page | **Panel #[number]** |
+| Error | Dramatic manga titles (see above) |
+
+---
+
+## Responsive Breakpoints
+
+| Breakpoint | Width | Columns | Notes |
+|---|---|---|---|
+| Mobile | < 640px | 1 column | Stack everything vertically |
+| Tablet | 640px - 1024px | 2 columns | Gallery 2-col, detail stacks |
+| Desktop | > 1024px | 4 columns | Full layout as designed |
+
+---
+
+## CSS Considerations
+
+### Screentone Pattern (CSS)
+
+```css
+.screentone {
+  background-image: radial-gradient(circle, #000 0.5px, transparent 0.5px);
+  background-size: 8px 8px;
+  opacity: 0.05;
+}
+```
+
+### Manga Panel Border
+
+```css
+.manga-panel {
+  border: 2px solid #000;
+  border-radius: 0;
+  background: #fff;
+}
+```
+
+### Sharp Corners Globally
+
+```css
+* {
+  border-radius: 0 !important; /* manga panels have no curves */
+}
+```
+
+### Font Loading
+
+```css
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Libre+Franklin:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+```
+
+---
+
+## Screenshots Reference
+
+Stitch project: "MangaSketch AI Generator"
+Screens generated:
+1. Generator Page (home + prompt form)
+2. Gallery Page (sketchbook grid)
+3. Detail Page (panel view + re-ink)
+4. System States (loading, errors, empty)
