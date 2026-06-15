@@ -10,6 +10,7 @@ export interface GenerateSketchRequest {
   mangaStyle: MangaStyle;
   drawingStyle: DrawingStyle;
   parentId?: string; // Present when regenerating/re-inking from an existing sketch version
+  seed?: number;     // Optional: lock the seed for composition/character consistency
 }
 
 // API response payload returned upon successful generation
@@ -20,6 +21,7 @@ export interface GenerateSketchResponse {
   drawingStyle: DrawingStyle;
   imageUrl: string;       // Permanent Supabase CDN URL, or base64 data URL for anonymous
   saved: boolean;         // true if persisted to DB (logged-in), false if temp in React state (anon)
+  seed: number;           // The seed used to generate this sketch
   parentId?: string;
   createdAt: string;
 }
@@ -33,6 +35,7 @@ export interface Sketch {
   manga_style: string; // Stored as snake_case in PostgreSQL
   drawing_style: string;
   image_url: string;
+  seed: number;
   created_at: string;
 }
 

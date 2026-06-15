@@ -325,7 +325,7 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │    [Main Image]   │  │  standing in rain,        │    │
 │  │                   │  │  tokyo skyline..."        │    │
 │  │                   │  │                           │    │
-│  │                   │  │ [SEINEN] [ROUGH SKETCH]   │    │
+│  │                   │  │ [SEINEN] [ROUGH] [SEED:739]│    │
 │  │                   │  ├──────────────────────────┤    │
 │  │                   │  │ ✏️ RE-INK PANEL           │    │
 │  │                   │  │                           │    │
@@ -333,10 +333,10 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │                   │  │                           │    │
 │  │                   │  │ MANGA: [■ SEINEN] [□ SHOJ]│    │
 │  │                   │  │ INK: [■ CLEAN] [□ INKED]  │    │
-│  │                   │  │                           │    │
+│  │                   │  │ [ ] LOCK VARIATION (SEED) │    │
 │  └───────────────────┘  │ [REGENERATE PANEL]        │    │
 │                         └──────────────────────────┘    │
-│  Created: Oct 12, 2023                                  │
+│  Created: Oct 12, 2023   Seed: 7394827419               │
 │                                                         │
 │  INKING PROCESS (version history)                       │
 │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐       │

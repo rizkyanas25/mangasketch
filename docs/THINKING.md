@@ -48,11 +48,11 @@ Express Backend (Railway)
      ├── 8. Check if user is authenticated:
      │      ├── YES (logged in):
      │      │     ├── Upload image to Supabase Storage
-     │      │     ├── Save metadata to PostgreSQL (prompt, mangaStyle, drawingStyle, image_url, user_id)
-     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, image_url, saved: true }
+     │      │     ├── Save metadata to PostgreSQL (prompt, mangaStyle, drawingStyle, seed, image_url, user_id)
+     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, seed, image_url, saved: true }
      │      │
      │      └── NO (anonymous):
-     │            └── Return { prompt, mangaStyle, drawingStyle, image_data: base64, saved: false }
+     │            └── Return { prompt, mangaStyle, drawingStyle, seed, image_data: base64, saved: false }
      │
      ▼
 User Browser
@@ -101,6 +101,7 @@ sketches table:
   manga_style   TEXT
   drawing_style TEXT
   image_url     TEXT
+  seed          BIGINT
   created_at    TIMESTAMPTZ
 ```
 
@@ -272,5 +273,5 @@ I prioritize based on what the assignment value most: **working software with re
 ## Known Limitations
 
 1. **Pollinations API has no SLA**. Its a free service, so there is no guarantee of uptime or response time. In production, I would add a fallback provider.
-2. **No image variation control**. Same prompt can produce very different results. This is inherent to how diffusion model works, not a bug.
+2. **Stochastic nature of diffusion models**. While we implement seed locking (variation control) to preserve composition and character structure during re-inking, minor visual shifts can still occur when modifying prompt tokens. This is normal behavior for diffusion processes.
 3. **Rate limiting is in-memory**. If backend restart, rate limit counter reset. For production, I would use Redis.
