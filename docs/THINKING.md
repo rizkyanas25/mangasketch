@@ -21,11 +21,11 @@ The product vision is simple: **users should feel like they are collaborating wi
 ```
 User Browser
      │
-     ├── 1. User type prompt + select manga style (Shonen, Seinen, Shojo, etc)
+     ├── 1. User type prompt + select Manga Style (Shonen, Seinen, etc) & Drawing Style (Rough, Inked, etc)
      │
      ├── 2. Frontend send POST request to backend
      │      POST /api/generate
-     │      Body: { prompt, style }
+     │      Body: { prompt, mangaStyle, drawingStyle }
      │      Header: Authorization: Bearer <jwt> (if logged in)
      │
      ▼
@@ -33,12 +33,10 @@ Express Backend (Railway)
      │
      ├── 3. Validate the prompt (not empty, not too long)
      │
-     ├── 4. Build full prompt by wrapping user input with manga template
+     ├── 4. Build full prompt by wrapping user input with manga & drawing templates
      │      Example:
      │      User input: "a girl sitting in coffee shop"
-     │      Final prompt: "manga sketch, black and white ink drawing,
-     │                     a girl sitting in coffee shop, shojo style,
-     │                     hand-drawn linework, screentone shading"
+     │      Final prompt: "a girl sitting in coffee shop, shojo style, elegant linework, expressive emotional tone, soft screens, manga sketch, black and white ink drawing, hand-drawn linework, screentone shading"
      │
      ├── 5. Send request to AI Image API (Pollinations.ai)
      │      GET https://image.pollinations.ai/prompt/{encoded_prompt}
@@ -50,11 +48,11 @@ Express Backend (Railway)
      ├── 8. Check if user is authenticated:
      │      ├── YES (logged in):
      │      │     ├── Upload image to Supabase Storage
-     │      │     ├── Save metadata to PostgreSQL (prompt, style, image_url, user_id)
-     │      │     └── Return { id, prompt, style, image_url, saved: true }
+     │      │     ├── Save metadata to PostgreSQL (prompt, mangaStyle, drawingStyle, image_url, user_id)
+     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, image_url, saved: true }
      │      │
      │      └── NO (anonymous):
-     │            └── Return { prompt, style, image_data: base64, saved: false }
+     │            └── Return { prompt, mangaStyle, drawingStyle, image_data: base64, saved: false }
      │
      ▼
 User Browser
@@ -96,19 +94,33 @@ Detail Page (/gallery/[id])
 
 ```sql
 generations table:
-  id         UUID (primary key)
-  parent_id  UUID (nullable, references generations.id)
-  user_id    UUID
-  prompt     TEXT
-  style      TEXT
-  image_url  TEXT
-  created_at TIMESTAMPTZ
+  id            UUID (primary key)
+  parent_id     UUID (nullable, references generations.id)
+  user_id       UUID
+  prompt        TEXT
+  manga_style   TEXT
+  drawing_style TEXT
+  image_url     TEXT
+  created_at    TIMESTAMPTZ
 ```
 
 - First generation: `parent_id = null`
 - Re-generation: `parent_id = original generation id`
 - Gallery query: group by root parent, show latest version, **cursor-based pagination** (load more as user scroll)
 - Detail query: get all rows where `id = X` or `parent_id = X`, order by `created_at DESC`
+
+### Safety Architecture (PG-13 Guardrails)
+
+To prevent abuse (NSFW, hate speech, explicit content) while keeping action-oriented manga concepts (like sword fights, magic, and monsters) unblocked, we implement a 2-layer safety system:
+
+1. **Layer 1: Backend Text Moderation (Blocklist)**
+   - Pre-request blocklist checks user prompt for highly offensive, sexual, or prohibited keywords.
+   - If triggered, immediately returns `400: PROHIBITED_PROMPT` without hitting the AI provider.
+   - UI maps this to the dramatic manga error: **"PROHIBITED INK!"** or **"FORBIDDEN TECHNIQUE!"** (e.g. *"Your prompt violates our community guidelines. Keep it PG-13!"*).
+
+2. **Layer 2: Prompt Wrapper Safeguards**
+   - Appends safety directives (`safe for work, PG-13, no nudity, no explicit content, no gore`) into the final wrapped prompt sent to Pollinations/Gemini.
+   - Restricts NSFW generation without over-sensitizing the model to action-packed manga keywords.
 
 ### Error Handling Flow
 
@@ -118,6 +130,10 @@ Backend receive request
      ├── Prompt empty or too long?
      │     └── Return 400: INVALID_PROMPT
      │         Frontend show: "Please enter a valid prompt."
+     │
+     ├── Prompt contains prohibited words? (Layer 1 Safety)
+     │     └── Return 400: PROHIBITED_PROMPT
+     │         Frontend show: "Prohibited ink! Keep your prompt PG-13."
      │
      ├── AI API not responding within 60s?
      │     └── Return 504: AI_TIMEOUT

@@ -69,19 +69,26 @@ Three-font system that balances impact, readability, and technical precision.
 
 ### Navigation (Simplified from Stitch)
 
-**Top navbar only, no sidebar.** Simpler to build, simpler to use.
+**Top navbar only, no sidebar.** 
 
+* **For Anonymous/Logged-out Users:**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  MANGASKETCH          GALLERY          [Create] [Login]  │
+│  MANGASKETCH                                    [Login] │
 └─────────────────────────────────────────────────────────┘
 ```
 
-- Logo "MANGASKETCH" in Anton, uppercase, left aligned
-- "GALLERY" link, center or next to logo
-- "Create" button (primary, filled black) right side
-- "Login" / user avatar, far right
-- No: Tools, Drafts, Assets, Settings
+* **For Logged-in Users:**
+```
+┌─────────────────────────────────────────────────────────┐
+│  MANGASKETCH          MY SKETCHBOOK            [Logout] │
+└─────────────────────────────────────────────────────────┘
+```
+
+- **Logo "MANGASKETCH"** in Anton, uppercase, left-aligned. Clicking the logo always returns to the Generator (Home) page.
+- **"MY SKETCHBOOK" link** (Libre Franklin 600) only visible to logged-in users, placed next to the logo.
+- **Action Button** on the far right: Shows "LOGIN" for anonymous users and "LOGOUT" (or user avatar with dropdown) for logged-in users.
+- No other submenus (Tools, Drafts, Settings).
 
 ### Page Structure
 
@@ -165,17 +172,23 @@ Gallery cards look like manga panels:
 
 ### Style Preset Chips
 
-Manga-style toggle chips for selecting art style:
+Manga-style toggle chips for selecting styles across two independent dimensions:
 
+1. **Manga Style** (Storytelling & Aesthetic):
 ```
-[■ SHONEN]  [□ SEINEN]  [□ SHOJO]  [□ DARK FANTASY]  [□ CYBERPUNK]
+[■ SHONEN]  [□ SEINEN]  [□ SHOJO]  [□ CHIBI]
 ```
 
-- Selected: black fill, white text
-- Unselected: white fill, black border 2px, black text
-- No border radius
-- Space Mono font, uppercase
-- Padding: 8px 16px
+2. **Drawing Style** (Artistic Development Stage):
+```
+[■ ROUGH SKETCH]  [□ CLEAN LINE ART]  [□ INKED MANGA]  [□ DETAILED ILLUSTRATION]
+```
+
+* Selected: black fill, white text
+* Unselected: white fill, black border 2px, black text
+* No border radius (0px)
+* Space Mono font, uppercase
+* Padding: 8px 16px
 
 ### Prompt Input
 
@@ -219,7 +232,7 @@ Large textarea that looks like it belongs in a sketchbook:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  MANGASKETCH          GALLERY          [Create] [Login]  │
+│  MANGASKETCH                                    [Login] │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  ┌─── screentone bg ──────────────────────────────────┐ │
@@ -237,7 +250,11 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │                                                     │ │
 │  └─────────────────────────────────────────────────────┘ │
 │                                                         │
-│  [■ SHONEN] [□ SEINEN] [□ SHOJO] [□ DARK FANTASY]      │
+│  MANGA STYLE:                                           │
+│  [■ SHONEN] [□ SEINEN] [□ SHOJO] [□ CHIBI]              │
+│                                                         │
+│  DRAWING STYLE:                                         │
+│  [■ ROUGH] [□ CLEAN] [□ INKED] [□ DETAILED]             │
 │                                                         │
 │  ┌─────────────────────────────────────────────────────┐ │
 │  │            ✏️  GENERATE PANEL                        │ │
@@ -263,7 +280,7 @@ Large textarea that looks like it belongs in a sketchbook:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  MANGASKETCH          GALLERY          [Create] [@]      │
+│  MANGASKETCH          MY SKETCHBOOK            [Logout] │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  MY SKETCHBOOK                          [Recent ▼]      │
@@ -275,9 +292,8 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │  img    │  │  img    │  │  img    │  │  img    │   │
 │  │         │  │         │  │         │  │         │   │
 │  ├─────────┤  ├─────────┤  ├─────────┤  ├─────────┤   │
-│  │ SHONEN  │  │ SEINEN  │  │ SHOJO   │  │ MECHA   │   │
-│  │ "Ronin  │  │ "Quiet  │  │ "Girl   │  │ "Giant  │   │
-│  │  samu.. │  │  morni..│  │  in co..│  │  robot..│   │
+│  │ SHONEN •│  │ SEINEN •│  │ SHOJO • │  │ CHIBI • │   │
+│  │ ROUGH   │  │ INKED   │  │ CLEAN   │  │ DETAILED│   │
 │  │ DETAILS │  │ DETAILS │  │ DETAILS │  │ DETAILS │   │
 │  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │
 │                                                         │
@@ -297,7 +313,7 @@ Large textarea that looks like it belongs in a sketchbook:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  MANGASKETCH          GALLERY          [Create] [@]      │
+│  MANGASKETCH          MY SKETCHBOOK            [Logout] │
 ├─────────────────────────────────────────────────────────┤
 │  ← BACK TO SKETCHBOOK                                   │
 │  PANEL #042                                             │
@@ -309,16 +325,18 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │    [Main Image]   │  │  standing in rain,        │    │
 │  │                   │  │  tokyo skyline..."        │    │
 │  │                   │  │                           │    │
-│  │                   │  │ [CYBERPUNK] [HALFTONE]    │    │
+│  │                   │  │ [SEINEN] [ROUGH SKETCH]   │    │
 │  │                   │  ├──────────────────────────┤    │
 │  │                   │  │ ✏️ RE-INK PANEL           │    │
 │  │                   │  │                           │    │
 │  │                   │  │ [Edit prompt area...]     │    │
 │  │                   │  │                           │    │
-│  │                   │  │ [■ SHONEN] [□ SEINEN]     │    │
-│  └───────────────────┘  │                           │    │
-│                         │ [REGENERATE PANEL]        │    │
-│  Created: Oct 12, 2023  └──────────────────────────┘    │
+│  │                   │  │ MANGA: [■ SEINEN] [□ SHOJ]│    │
+│  │                   │  │ INK: [■ CLEAN] [□ INKED]  │    │
+│  │                   │  │                           │    │
+│  └───────────────────┘  │ [REGENERATE PANEL]        │    │
+│                         └──────────────────────────┘    │
+│  Created: Oct 12, 2023                                  │
 │                                                         │
 │  INKING PROCESS (version history)                       │
 │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐       │
@@ -425,7 +443,7 @@ Use manga/mangaka terminology throughout the UI instead of generic tech terms:
 | Infinite scroll loading | **Inking more panels...** |
 | Version history | **Inking Process** |
 | Prompt | **Mangaka Prompt** |
-| Style presets | **Ink Style** |
+| Style presets | **Manga Style & Drawing Style** |
 | Save | **Save to Sketchbook** |
 | Detail page | **Panel #[number]** |
 | Error | Dramatic manga titles (see above) |
@@ -480,6 +498,24 @@ Use manga/mangaka terminology throughout the UI instead of generic tech terms:
 
 ---
 
+## User Flows & Edge Cases
+
+### 1. Post-Auth Synced Sketch Flow (Anonymous to Logged-in)
+* **Problem**: Anonymous users generate a sketch and want to save it, but logging in via Supabase Google OAuth requires a page redirect, which would normally wipe out the generated image from React state.
+* **Solution**: 
+  1. When an anonymous user generates a sketch, the frontend caches the metadata (prompt, `mangaStyle`, `drawingStyle`, and the temporary base64 image data) in `localStorage` under a key like `mangasketch_temp_generation`.
+  2. When the user clicks "Login to save this to your sketchbook", they are redirected to Google Sign-in.
+  3. Upon successful redirect back to the app, the frontend checks `localStorage` for `mangasketch_temp_generation` and checks if the user is now authenticated.
+  4. If authenticated, the frontend automatically triggers a background request to upload the cached base64 image to Supabase Storage, saves the record to the database under their UID, removes the item from `localStorage`, and displays a toast notification: *"Saved your last sketch to My Sketchbook!"*.
+
+### 2. Interactive Version History ("Inking Process")
+* Clicking on any past version card (e.g. `v01 (Rough Sketch)`) in the "Inking Process" timeline on the Detail page will:
+  - Load that version's main image into the detail viewport.
+  - Pre-populate the **Re-ink Panel** form with that version's exact prompt text, Manga Style, and Drawing Style, making it easy to fork or refine from any historical step.
+* The active/selected version in the timeline is highlighted with a bold black border and a star `★`.
+
+---
+
 ## Screenshots Reference
 
 Stitch project: "MangaSketch AI Generator"
@@ -488,3 +524,4 @@ Screens generated:
 2. Gallery Page (sketchbook grid)
 3. Detail Page (panel view + re-ink)
 4. System States (loading, errors, empty)
+
