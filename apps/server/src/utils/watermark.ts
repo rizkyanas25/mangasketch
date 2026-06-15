@@ -11,27 +11,27 @@ export function generateWatermarkSvg(userName: string | undefined, position: Wat
   const width = 768;
   const height = 1024;
   
-  // Set center coordinates based on the corner position (64px margin from edges)
-  let cx = 704;
-  let cy = 960; // Default to BOTTOM_RIGHT
+  // Set center coordinates based on the corner position (80px margin from edges)
+  let cx = 688;
+  let cy = 944; // Default to BOTTOM_RIGHT
 
   switch (position) {
     case 'TOP_LEFT':
-      cx = 64;
-      cy = 64;
+      cx = 80;
+      cy = 80;
       break;
     case 'TOP_RIGHT':
-      cx = 704;
-      cy = 64;
+      cx = 688;
+      cy = 80;
       break;
     case 'BOTTOM_LEFT':
-      cx = 64;
-      cy = 960;
+      cx = 80;
+      cy = 944;
       break;
     case 'BOTTOM_RIGHT':
     default:
-      cx = 704;
-      cy = 960;
+      cx = 688;
+      cy = 944;
       break;
   }
 

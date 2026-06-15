@@ -278,6 +278,18 @@ I prioritize based on what the assignment value most: **working software with re
 
 **Why third**: Now I have working backend, I can build frontend with real data flowing through.
 
+- **[UPDATED ON DEVELOPMENT]**:
+  - **Zustand for Global UI State**: 
+    I use Zustand (`useUiStore`) instead of putting everything inside React Context. It helps share the `isGenerating` loading state to the navigation Header. Because it uses selector-based subscription, it avoids re-rendering the whole Header or pages when generation is pending. Also, this store will be very useful when we need to share other global UI states later, like toast message queue or sidebar/drawer states.
+  - **Auth & Theme Providers separation**:
+    I split root providers into `AuthProvider` and `ThemeProvider` instead of one big context. This keeps concerns separated. Changing themes will not trigger any authentication session checks, keeping renders light. This separation also makes it easy to add other providers later (like ToastProvider or ReactQueryProvider) without making a single giant context file.
+  - **Retro Theme Switcher**:
+    I added a Neo-Brutalist theme switcher in the header with three curated modes:
+    1. `Light Ink` (high-contrast black/white manga paper style)
+    2. `Recycled Book / Tankobon` (warm sepia paper color, like vintage cheap Shonen Jump magazine print)
+    3. `Midnight Moon` (high-contrast dark mode)
+    Why this theme switcher exist: pure white background can be very blinding if user open the website at night. So I provide warm sepia (`Recycled Book`) and dark mode (`Midnight Moon`) to make it comfortable for eyes, while still looking premium and keeping the strong manga identity.
+
 #### Phase 4: Polish + Deploy (Day 5)
 - UI polish, make it feel like real product, not assignment
 - Deploy to Vercel + Railway

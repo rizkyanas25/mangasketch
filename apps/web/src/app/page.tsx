@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState, useEffect } from 'react';
 import {
   MangaStyle,
   DrawingStyle,
@@ -8,8 +8,15 @@ import {
 } from '@mangasketch/shared';
 import { MagicEdit } from 'pixelarticons/react';
 import StyleSelector from '@/components/StyleSelector';
+import { useAuth } from '@/providers/AuthProvider';
+import { generateSketchAction } from './actions';
+import InkLoader from '@/components/InkLoader';
+import { useUiStore } from '@/store/uiStore';
 
 export default function Home() {
+  const { session } = useAuth();
+  const setIsGenerating = useUiStore((state) => state.setIsGenerating);
+
   // Local state for form controls
   const [prompt, setPrompt] = useState('');
   const [mangaStyle, setMangaStyle] = useState<MangaStyle>('SHONEN');
@@ -21,9 +28,14 @@ export default function Home() {
   const [watermarkPosition, setWatermarkPosition] =
     useState<WatermarkPosition>('BOTTOM_RIGHT');
 
-  // Mock states for testing UI
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, formAction, isPending] = useActionState(generateSketchAction, {
+    data: null,
+    error: null,
+  });
+
+  useEffect(() => {
+    setIsGenerating(isPending);
+  }, [isPending, setIsGenerating]);
 
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= 500) {
@@ -52,7 +64,17 @@ export default function Home() {
       {/* 2. Main Workspace: 2-Column Grid (Form Left, Canvas Right) */}
       <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
         {/* Left: Input Form Panel (Cols: 5) */}
-        <form className='lg:col-span-5 flex flex-col gap-6 bg-background border-4 border-foreground p-6 neo-shadow'>
+        <form 
+          action={formAction}
+          className='lg:col-span-5 flex flex-col gap-6 bg-background border-4 border-foreground p-6 neo-shadow'
+        >
+          {/* Hidden inputs to pass states to Server Action */}
+          <input type="hidden" name="token" value={session?.access_token || ""} />
+          <input type="hidden" name="mangaStyle" value={mangaStyle} />
+          <input type="hidden" name="drawingStyle" value={drawingStyle} />
+          <input type="hidden" name="watermarkText" value={watermarkText} />
+          <input type="hidden" name="watermarkPosition" value={watermarkPosition} />
+
           {/* Prompt Textarea */}
           <div className='flex flex-col gap-2'>
             <label className='font-mono text-xs font-bold uppercase tracking-wider flex justify-between'>
@@ -60,10 +82,14 @@ export default function Home() {
               <span className='text-neutral'>{prompt.length}/500</span>
             </label>
             <textarea
+              name="prompt"
               value={prompt}
+              disabled={isPending}
               onChange={handlePromptChange}
               placeholder='E.G., YOUNG PIRATE CAPTAIN DESCENDING FROM THE SKY ABOVE A BATTLEFIELD, SOLDIERS LOOKING UP IN SHOCK, THE FINAL WAR ABOUT TO BEGIN...'
-              className='w-full min-h-[120px] p-3 border-2 border-foreground bg-background text-foreground font-mono text-sm placeholder:font-mono placeholder:text-sm placeholder:text-neutral focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-all resize-none rounded-none uppercase'
+              className={`w-full min-h-[120px] p-3 border-2 border-foreground bg-background text-foreground font-mono text-sm placeholder:font-mono placeholder:text-sm placeholder:text-neutral focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-all resize-none rounded-none uppercase ${
+                isPending ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             />
           </div>
 
@@ -77,12 +103,13 @@ export default function Home() {
             setWatermarkText={setWatermarkText}
             watermarkPosition={watermarkPosition}
             setWatermarkPosition={setWatermarkPosition}
+            disabled={isPending}
           />
 
           {/* Large Generate Button */}
           <button
             type='submit'
-            disabled={isLoading || !prompt.trim()}
+            disabled={isPending || !prompt.trim()}
             className='w-full font-display text-lg md:text-xl py-3 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none uppercase flex items-center justify-center gap-2'
           >
             <MagicEdit className='w-6 h-6' />
@@ -93,12 +120,25 @@ export default function Home() {
         {/* Right: Manga Panel Canvas Workspace (Cols: 7) */}
         <section className='lg:col-span-7 flex flex-col bg-background border-4 border-foreground p-6 neo-shadow h-full min-h-[500px]'>
           <div className='flex-1 flex flex-col items-center justify-center border-4 border-dashed border-foreground/30 bg-screentone-dense/10 p-6 min-h-[400px] relative transition-colors'>
-            {generatedImage ? (
-              <div className='relative w-full h-full max-w-md aspect-[3/4] border-2 border-foreground bg-white neo-shadow-sm overflow-hidden'>
-                {/* Image will be rendered here */}
+            {isPending ? (
+              <InkLoader />
+            ) : state.error ? (
+              <div className="text-center p-6 max-w-sm">
+                <div className="font-display text-2xl text-red-500 mb-2 uppercase">
+                  ERROR OCCURRED
+                </div>
+                <p className="font-mono text-xs text-neutral mb-4 uppercase">
+                  {state.error}
+                </p>
+                <p className="font-mono text-[10px] text-neutral/50 uppercase">
+                  Please correct the error and try again.
+                </p>
+              </div>
+            ) : state.data?.imageUrl ? (
+              <div className='relative w-full max-w-md aspect-[3/4] border-2 border-foreground bg-white neo-shadow-sm overflow-hidden'>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={generatedImage}
+                  src={state.data.imageUrl}
                   alt='Manga Panel Generation'
                   className='w-full h-full object-cover'
                 />

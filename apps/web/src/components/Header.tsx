@@ -6,12 +6,14 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { FileSharp, BookOpenSharp, Moon } from 'pixelarticons/react';
+import { useUiStore } from '@/store/uiStore';
 
 export default function Header() {
   const { user, loading, login, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const isGenerating = useUiStore((state) => state.isGenerating);
 
   const isSketchesPage = pathname === '/sketches';
 
@@ -110,7 +112,8 @@ export default function Header() {
                         setDropdownOpen(false);
                         logout();
                       }}
-                      className='w-full font-display py-2 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase text-sm'
+                      disabled={isGenerating}
+                      className='w-full font-display py-2 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none'
                     >
                       LOGOUT
                     </button>
@@ -121,7 +124,8 @@ export default function Header() {
           ) : (
             <button
               onClick={() => login()}
-              className='font-display px-5 py-1.5 text-sm md:text-base border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase'
+              disabled={isGenerating}
+              className='font-display px-5 py-1.5 text-sm md:text-base border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none'
             >
               LOGIN
             </button>

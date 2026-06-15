@@ -18,6 +18,7 @@ interface StyleSelectorProps {
   setWatermarkText: (text: string) => void;
   watermarkPosition: WatermarkPosition;
   setWatermarkPosition: (pos: WatermarkPosition) => void;
+  disabled?: boolean;
 }
 
 interface HankoStampProps {
@@ -175,6 +176,7 @@ export default function StyleSelector({
   setWatermarkText,
   watermarkPosition,
   setWatermarkPosition,
+  disabled = false,
 }: StyleSelectorProps) {
   const handleWatermarkTextChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -197,11 +199,15 @@ export default function StyleSelector({
             <button
               type='button'
               key={style}
+              disabled={disabled}
               onClick={() => setMangaStyle(style)}
-              className={`font-mono text-xs font-bold px-3 py-1.5 border-2 border-foreground cursor-pointer transition-all uppercase rounded-none ${
+              className={`font-mono text-xs font-bold px-3 py-1.5 border-2 border-foreground uppercase rounded-none transition-all ${
+                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              } ${
                 mangaStyle === style
                   ? 'bg-foreground text-background'
-                  : 'bg-background text-foreground hover:bg-screentone'
+                  : 'bg-background text-foreground ' +
+                    (disabled ? '' : 'hover:bg-screentone')
               }`}
             >
               {style}
@@ -220,11 +226,15 @@ export default function StyleSelector({
             <button
               type='button'
               key={style}
+              disabled={disabled}
               onClick={() => setDrawingStyle(style)}
-              className={`font-mono text-xs font-bold px-3 py-2 border-2 border-foreground cursor-pointer transition-all uppercase text-center rounded-none ${
+              className={`font-mono text-xs font-bold px-3 py-2 border-2 border-foreground uppercase text-center rounded-none transition-all ${
+                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              } ${
                 drawingStyle === style
                   ? 'bg-foreground text-background'
-                  : 'bg-background text-foreground hover:bg-screentone'
+                  : 'bg-background text-foreground ' +
+                    (disabled ? '' : 'hover:bg-screentone')
               }`}
             >
               {style.replace(/_/g, ' ')}
@@ -247,8 +257,11 @@ export default function StyleSelector({
                 type='text'
                 value={watermarkText}
                 onChange={handleWatermarkTextChange}
+                disabled={disabled}
                 placeholder='Your initial'
-                className='p-2 border-2 border-foreground bg-background text-foreground font-display text-xs tracking-wider uppercase focus:outline-none focus:ring-1 focus:ring-foreground rounded-none w-24.5'
+                className={`p-2 h-10 border-2 border-foreground bg-background text-foreground font-display text-xs tracking-wider uppercase focus:outline-none focus:ring-1 focus:ring-foreground rounded-none w-full ${
+                  disabled ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               />
             </div>
 
@@ -264,11 +277,11 @@ export default function StyleSelector({
           </div>
 
           {/* Right Column: Stamp Placement 2x2 Grid with 3:4 Aspect Ratio */}
-          <div className='flex flex-col gap-1.5 items-start'>
+          <div className='flex flex-col gap-1.5 items-end self-stretch'>
             <label className='font-mono text-[10px] font-bold uppercase tracking-wider text-left'>
               POSITION
             </label>
-            <div className='grid grid-cols-2 gap-1 border-2 border-foreground p-1 bg-neutral-light/5 w-32 h-full'>
+            <div className='grid grid-cols-2 gap-1 border-2 border-foreground p-1 bg-neutral-light/5 flex-1 aspect-[3/4] w-auto'>
               {WATERMARK_POSITIONS.map((pos) => {
                 const isActive = watermarkPosition === pos;
 
@@ -303,17 +316,26 @@ export default function StyleSelector({
                   <button
                     type='button'
                     key={pos}
+                    disabled={disabled}
                     onClick={() => setWatermarkPosition(pos)}
                     title={`Place stamp at ${pos.replace('_', ' ')}`}
-                    className={`w-full h-full relative cursor-pointer p-0.5 focus:outline-none transition-all group ${
-                      isActive ? '' : 'bg-transparent hover:bg-neutral-light/10'
+                    className={`w-full h-full relative p-0.5 focus:outline-none transition-all ${
+                      disabled
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'cursor-pointer group'
+                    } ${
+                      isActive
+                        ? ''
+                        : 'bg-transparent ' +
+                          (disabled ? '' : 'hover:bg-neutral-light/10')
                     }`}
                   >
                     <div
                       className={`w-full h-full relative transition-all ${borderClasses} ${
                         isActive
                           ? 'border-red-500'
-                          : 'border-foreground/30 group-hover:border-foreground/60'
+                          : 'border-foreground/30 ' +
+                            (disabled ? '' : 'group-hover:border-foreground/60')
                       }`}
                     >
                       <HankoStamp
@@ -321,7 +343,8 @@ export default function StyleSelector({
                         className={`w-4 h-4 absolute transition-all ${stampPosition} ${
                           isActive
                             ? 'scale-100 opacity-100'
-                            : 'scale-75 opacity-0 group-hover:opacity-40'
+                            : 'scale-75 opacity-0 ' +
+                              (disabled ? '' : 'group-hover:opacity-40')
                         }`}
                       />
                     </div>
