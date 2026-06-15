@@ -14,6 +14,7 @@ export type DrawingStyle = typeof DRAWING_STYLES[number];
 
 // --- 2. Constraints ---
 export const MAX_PROMPT_LENGTH = 500;
+export const MAX_WATERMARK_LENGTH = 4;
 
 // --- 3. Safety (SFW / PG-13 protection) ---
 export const BLOCKED_KEYWORDS = [
@@ -39,28 +40,36 @@ export interface ApiErrorResponse {
   message: string;
 }
 
-// --- 5. Data Transmission Payloads ---
+// --- 5. Watermark Settings ---
+export const WATERMARK_POSITIONS = ['TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_LEFT', 'BOTTOM_RIGHT'] as const;
+export type WatermarkPosition = typeof WATERMARK_POSITIONS[number];
+
+// --- 6. Data Transmission Payloads ---
 
 // API request payload for generating/re-inking sketches
 export interface GenerateSketchRequest {
   prompt: string;
   mangaStyle: MangaStyle;
   drawingStyle: DrawingStyle;
-  parentId?: string; // Present when regenerating/re-inking from an existing sketch version
-  seed?: number;     // Optional: lock the seed for composition/character consistency
+  parentId?: string;          // Present when regenerating/re-inking from an existing sketch version
+  seed?: number;              // Optional: lock the seed for composition/character consistency
+  watermarkText?: string;     // Optional: custom watermark text (1-4 characters)
+  watermarkPosition?: WatermarkPosition; // Optional: placement corner
 }
 
 // API response payload returned upon successful generation
 export interface GenerateSketchResponse {
-  id: string;             // UUID in database, or temporary client-generated ID for anonymous
+  id: string;                 // UUID in database, or temporary client-generated ID for anonymous
   prompt: string;
   mangaStyle: MangaStyle;
   drawingStyle: DrawingStyle;
-  imageUrl: string;       // Permanent Supabase CDN URL, or base64 data URL for anonymous
-  saved: boolean;         // true if persisted to DB (logged-in), false if temp in React state (anon)
-  seed: number;           // The seed used to generate this sketch
+  imageUrl: string;           // Permanent Supabase CDN URL, or base64 data URL for anonymous
+  saved: boolean;             // true if persisted to DB (logged-in), false if temp in React state (anon)
+  seed: number;               // The seed used to generate this sketch
   parentId?: string;
   createdAt: string;
+  watermarkText?: string;
+  watermarkPosition?: WatermarkPosition;
 }
 
 // Model representing a row in the Supabase PostgreSQL 'sketches' table
@@ -69,7 +78,7 @@ export interface Sketch {
   parent_id: string | null;
   user_id: string;
   prompt: string;
-  manga_style: string; // Stored as snake_case in PostgreSQL
+  manga_style: string;        // Stored as snake_case in PostgreSQL
   drawing_style: string;
   image_url: string;
   seed: number;

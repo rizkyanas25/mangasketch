@@ -4,7 +4,19 @@ import { optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 import { AiService } from '../services/aiService';
 import { SketchService } from '../services/sketchService';
 import { wrapPrompt, checkSafetyBlocklist } from '../utils/promptHelper';
-import { MangaStyle, DrawingStyle, GenerateSketchResponse, MAX_PROMPT_LENGTH, MANGA_STYLES, DRAWING_STYLES, STANDARD_ERRORS } from '@mangasketch/shared';
+import { applyWatermark } from '../utils/watermark';
+import {
+  MangaStyle,
+  DrawingStyle,
+  GenerateSketchResponse,
+  MAX_PROMPT_LENGTH,
+  MANGA_STYLES,
+  DRAWING_STYLES,
+  STANDARD_ERRORS,
+  WatermarkPosition,
+  WATERMARK_POSITIONS,
+  MAX_WATERMARK_LENGTH
+} from '@mangasketch/shared';
 
 const router = Router();
 
@@ -13,7 +25,15 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
   try {
-    const { prompt, mangaStyle, drawingStyle, parentId, seed } = req.body;
+    const {
+      prompt,
+      mangaStyle,
+      drawingStyle,
+      parentId,
+      seed,
+      watermarkText,
+      watermarkPosition
+    } = req.body;
 
     // 1. Validation
     if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
@@ -58,6 +78,43 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       });
     }
 
+    // Custom Watermark Validation
+    if (watermarkText !== undefined && watermarkText !== null) {
+      if (typeof watermarkText !== 'string') {
+        return res.status(400).json({
+          code: 'UNKNOWN_ERROR',
+          message: 'Watermark text must be a string.'
+        });
+      }
+      
+      const trimmed = watermarkText.trim();
+      if (trimmed !== '') {
+        if (trimmed.length > MAX_WATERMARK_LENGTH) {
+          return res.status(400).json({
+            code: 'UNKNOWN_ERROR',
+            message: `Watermark name is too long. Max ${MAX_WATERMARK_LENGTH} characters.`
+          });
+        }
+        // Alphanumeric + spaces only to avoid HTML/SVG injection
+        const alphanumericRegex = /^[a-zA-Z0-9 ]+$/;
+        if (!alphanumericRegex.test(trimmed)) {
+          return res.status(400).json({
+            code: 'UNKNOWN_ERROR',
+            message: 'Watermark name can only contain letters, numbers, and spaces.'
+          });
+        }
+      }
+    }
+
+    if (watermarkPosition !== undefined && watermarkPosition !== null) {
+      if (!(WATERMARK_POSITIONS as readonly string[]).includes(watermarkPosition)) {
+        return res.status(400).json({
+          code: 'UNKNOWN_ERROR',
+          message: 'Invalid watermark position selected.'
+        });
+      }
+    }
+
     // 2. Safety Blocklist Check (Layer 1 Safety)
     if (checkSafetyBlocklist(prompt)) {
       return res.status(400).json({
@@ -70,7 +127,17 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     const wrappedPrompt = wrapPrompt(prompt, mangaStyle, drawingStyle);
 
     // 4. Generate Image via AI Service
-    const { buffer, seedUsed } = await AiService.generateMangaPanel(wrappedPrompt, seed);
+    const { buffer: rawBuffer, seedUsed } = await AiService.generateMangaPanel(wrappedPrompt, seed);
+
+    // 4.1 Apply Watermark if watermarkText is provided (can be empty string for a clean stamp)
+    let finalBuffer = rawBuffer;
+    if (watermarkText !== undefined && watermarkText !== null) {
+      finalBuffer = await applyWatermark(
+        rawBuffer,
+        watermarkText,
+        watermarkPosition || 'BOTTOM_RIGHT'
+      );
+    }
 
     // 5. Handle authenticated vs anonymous persistence
     if (req.user) {
@@ -82,7 +149,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       const filepath = `${userId}/${timestamp}_${randomSuffix}.png`;
 
       // Upload generated buffer to storage
-      const imageUrl = await SketchService.uploadSketchToStorage(buffer, filepath);
+      const imageUrl = await SketchService.uploadSketchToStorage(finalBuffer, filepath);
 
       // Save sketch record to database
       const savedSketch = await SketchService.saveSketchToDatabase({
@@ -104,13 +171,15 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
         saved: true,
         seed: savedSketch.seed,
         parentId: savedSketch.parent_id || undefined,
-        createdAt: savedSketch.created_at
+        createdAt: savedSketch.created_at,
+        watermarkText: watermarkText !== undefined ? watermarkText : undefined,
+        watermarkPosition: watermarkPosition || undefined
       };
 
       return res.status(201).json(responsePayload);
     } else {
       // Anonymous user: return image as a Base64 data URL
-      const base64Image = buffer.toString('base64');
+      const base64Image = finalBuffer.toString('base64');
       const dataUrl = `data:image/png;base64,${base64Image}`;
       const tempId = crypto.randomUUID();
 
@@ -123,7 +192,9 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
         saved: false,
         seed: seedUsed,
         parentId: parentId || undefined,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        watermarkText: watermarkText !== undefined ? watermarkText : undefined,
+        watermarkPosition: watermarkPosition || undefined
       };
 
       return res.status(200).json(responsePayload);

@@ -32,8 +32,8 @@ const DRAWING_STYLE_PROMPTS: Record<DrawingStyle, string> = {
 // Layer 2: Safety Injector (built into prompt to steer AI model weights away from NSFW)
 const SAFETY_INJECTOR = 'safe for work, PG-13, no nudity, no explicit content, no gore';
 
-// Global styling modifiers to enforce B&W manga aesthetics
-const GLOBAL_STYLE_MODIFIERS = 'black and white, monochrome, manga ink drawing, hand-drawn linework';
+// Global styling modifiers to enforce B&W manga aesthetics (front-loaded for maximum weight)
+const GLOBAL_STYLE_MODIFIERS = 'black and white, monochrome, grayscale, manga ink drawing, hand-drawn linework, high-contrast ink values';
 
 /**
  * Wraps a user prompt with curated manga and drawing style modifiers, global rules, and safety guardrails.
@@ -51,6 +51,7 @@ export function wrapPrompt(
   const drawingPrompt = DRAWING_STYLE_PROMPTS[drawingStyle];
   
   // Combine all layers to build the final prompt
-  // Enforces style hierarchy: [Subject description] -> [Manga Genre Style] -> [Drawing Stage] -> [B&W Rule] -> [Safety]
-  return `${prompt}, ${stylePrompt}, ${drawingPrompt}, ${GLOBAL_STYLE_MODIFIERS}, ${SAFETY_INJECTOR}`;
+  // Front-loads B&W constraint for maximum attention weight in diffusion models
+  // Hierarchy: [B&W Medium] -> [Subject] -> [Manga Genre] -> [Drawing Stage] -> [Safety]
+  return `${GLOBAL_STYLE_MODIFIERS}, ${prompt}, ${stylePrompt}, ${drawingPrompt}, ${SAFETY_INJECTOR}`;
 }

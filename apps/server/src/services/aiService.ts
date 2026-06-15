@@ -15,16 +15,16 @@ export class AiService {
       throw new Error('[AI Service] POLLINATIONS_API_KEY is not defined in backend environment.');
     }
 
-    // 1. Resolve or generate a random 32-bit integer seed
-    // We limit to 32-bit (max 4294967295) to stay safely within JS Number limits
+    // 1. Resolve or generate a random 32-bit signed integer seed
+    // Pollinations Flux API expects seed <= 2147483647 (max signed 32-bit int)
     const finalSeed = seed !== undefined && seed !== null
       ? seed
-      : Math.floor(Math.random() * 4294967295);
+      : Math.floor(Math.random() * 2147483647);
 
     const encodedPrompt = encodeURIComponent(wrappedPrompt);
     const width = 768; // 3:4 portrait aspect ratio
     const height = 1024;
-    const model = 'flux';
+    const model = 'zimage';
 
     const url = `https://gen.pollinations.ai/image/${encodedPrompt}?width=${width}&height=${height}&model=${model}&seed=${finalSeed}&key=${POLLINATIONS_API_KEY}`;
 
