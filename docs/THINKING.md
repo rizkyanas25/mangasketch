@@ -25,7 +25,7 @@ User Browser
      │
      ├── 2. Frontend send POST request to backend
      │      POST /api/sketches
-     │      Body: { prompt, mangaStyle, drawingStyle }
+     │      Body: { prompt, mangaStyle, drawingStyle, watermarkText?, watermarkPosition? }
      │      Header: Authorization: Bearer <jwt> (if logged in)
      │
      ▼
@@ -48,11 +48,11 @@ Express Backend (Railway)
      ├── 8. Check if user is authenticated:
      │      ├── YES (logged in):
      │      │     ├── Upload image to Supabase Storage
-     │      │     ├── Save metadata to PostgreSQL (prompt, mangaStyle, drawingStyle, image_url, user_id)
-     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, image_url, saved: true }
+     │      │     ├── Save metadata to PostgreSQL (prompt, mangaStyle, drawingStyle, seed, image_url, user_id)
+     │      │     └── Return { id, prompt, mangaStyle, drawingStyle, seed, image_url, saved: true, watermarkText?, watermarkPosition? }
      │      │
      │      └── NO (anonymous):
-     │            └── Return { prompt, mangaStyle, drawingStyle, image_data: base64, saved: false }
+     │            └── Return { prompt, mangaStyle, drawingStyle, seed, image_url: base64, saved: false, watermarkText?, watermarkPosition? }
      │
      ▼
 User Browser
@@ -101,6 +101,7 @@ sketches table:
   manga_style   TEXT
   drawing_style TEXT
   image_url     TEXT
+  seed          BIGINT
   created_at    TIMESTAMPTZ
 ```
 
@@ -108,6 +109,11 @@ sketches table:
 - Re-ink sketch: `parent_id = original sketch id`
 - Sketchbook query: group by root parent, show latest version, **cursor-based pagination** (load more as user scroll)
 - Detail query: get all rows where `id = X` or `parent_id = X`, order by `created_at DESC`
+
+- **[UPDATED ON DEVELOPMENT]**: 
+  - To avoid complex recursive PostgreSQL queries, I implement a **flat-tree structure** where all variations point directly to the original root parent sketch (`parent_id = root parent id`). This is resolved dynamically in the backend using `getRootParentId()`.
+  - Sketchbook query simply fetches all sketches for the user sorted by latest (`created_at DESC`).
+  - Detail query retrieves the parent and all variations (`id = rootId OR parent_id = rootId`) sorted chronologically (`created_at ASC`) to render version sequence correctly in the UI.
 
 ### Safety Architecture (PG-13 Guardrails)
 
@@ -146,6 +152,18 @@ Backend receive request
      ├── Too many requests from anonymous user? (>5/hour)
      │     └── Return 429: RATE_LIMITED
      │         Frontend show: "Too many requests. Please wait."
+     │
+     ├── **[UPDATED ON DEVELOPMENT]** - GET /api/sketches (No auth token)?
+     │     └── Return 401: UNAUTHORIZED
+     │         Frontend show: "You must be logged in to view your sketchbook."
+     │
+     ├── **[UPDATED ON DEVELOPMENT]** - GET /api/sketches/:id (Invalid UUID format)?
+     │     └── Return 400: INVALID_SKETCH_ID
+     │         Frontend show: "Invalid sketch ID format."
+     │
+     ├── **[UPDATED ON DEVELOPMENT]** - GET /api/sketches/:id (Sketch not found or not own by user)?
+     │     └── Return 404: SKETCH_NOT_FOUND
+     │         Frontend show: "Sketch not found or access denied."
      │
      └── Network/server down?
            └── Frontend catch network error
@@ -193,13 +211,24 @@ That said, during development I might switch to **Gemini Flash Image API** if Po
 
 Both providers require API key, so setup complexity is similar. The decision will come down to which one produce better manga sketch output during testing.
 
+- **[UPDATED ON DEVELOPMENT]**:
+  - I use **Z-Image Turbo** (`zimage`) as the default model. It gives very fast generation (75 images/hour on Seed tier) and does not have native AI watermarks.
+  - To guarantee a pure black-and-white output and eliminate color leakage, I programmatically convert the image buffer to grayscale using the **Sharp** library before applying the watermark.
+
+### Hanko Stamp Watermark
+- **[UPDATED ON DEVELOPMENT]**: 
+  - I added a traditional Japanese hanko stamp watermark to sketches to make them feel authentic like they were made by a real manga artist.
+  - The watermark is a red stamp with Katakana text `マンガスケッチ` and user initials (optional, max 4 chars). It is always generated and applied by the backend using `sharp`.
+
+
+
 ### Monorepo Structure
 
 I use single repository with `apps/web` and `apps/server` folder instead of two separate repos. The reasons:
 
 - **Single clone, single README**. Reviewer can clone once, run `npm install` at root, and start both frontend and backend. This help achieve the "running in under 15 minutes" target.
 - **Unified commit history**. Reviewer can see the full development timeline in one place. With two repos, the story is scattered and harder to follow.
-- **Shared types**. We share TypeScript models (like `Sketch`, request/response payloads, and error contracts) using a local workspace package `@mangasketch/shared` located at `packages/shared`. This keeps both frontend and backend fully in sync without publishing to npm.
+- **Shared workspace package**. We share TypeScript definitions, data models, validation constants, and API contracts using a local workspace package `@mangasketch/shared` located at `packages/shared`. This acts as a single source of truth to keep both frontend and backend fully in sync without publishing to npm.
 - **Simpler CI/CD**. One repo to manage, one set of environment variables to configure.
 
 Deploy is still independent. Vercel and Railway both support monorepo by setting "Root Directory" to `apps/web` and `apps/server` respectively. So I get the benefit of monorepo without the drawback of coupled deployment.
@@ -272,5 +301,5 @@ I prioritize based on what the assignment value most: **working software with re
 ## Known Limitations
 
 1. **Pollinations API has no SLA**. Its a free service, so there is no guarantee of uptime or response time. In production, I would add a fallback provider.
-2. **No image variation control**. Same prompt can produce very different results. This is inherent to how diffusion model works, not a bug.
+2. **Stochastic nature of diffusion models**. While we implement seed locking (variation control) to preserve composition and character structure during re-inking, minor visual shifts can still occur when modifying prompt tokens. This is normal behavior for diffusion processes.
 3. **Rate limiting is in-memory**. If backend restart, rate limit counter reset. For production, I would use Redis.

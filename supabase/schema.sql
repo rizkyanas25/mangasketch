@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.sketches (
   manga_style TEXT NOT null,
   drawing_style TEXT NOT null,
   image_url TEXT NOT null,
+  seed BIGINT NOT null,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT null
 );
 

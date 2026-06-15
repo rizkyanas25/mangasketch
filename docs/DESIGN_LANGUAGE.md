@@ -210,6 +210,18 @@ Large textarea that looks like it belongs in a sketchbook:
 - Focus state: border stays 2px, add subtle black outer shadow (0 0 0 2px black)
 - Min height: 120px
 
+### Custom Watermark (Hanko Stamp)
+
+Users can optionally add a customized watermark to their generated sketches, styled as a traditional Japanese Hanko Stamp:
+
+*   **Design**: A red round seal stamp, featuring:
+    *   Constant Katakana in the center: **マンガスケッチ** (MangaSketch) split into two vertical columns ("マンガ" on the right, "スケッチ" on the left).
+    *   Filled red segment at the bottom displaying the user's custom name in white uppercase text (1-4 characters, e.g. "JOHN").
+*   **Aesthetic Details**: Red color `#D9383A` with a subtle transparency (`opacity: 0.85`), placed diagonally in one of the 4 corners of the panel.
+*   **Controls in Form**:
+    *   Input: Text input, uppercase constraint, placeholder "JOHN" (max 4 characters).
+    *   Position: A 2x2 grid selector representing the 4 corners: `TOP_LEFT`, `TOP_RIGHT`, `BOTTOM_LEFT`, and `BOTTOM_RIGHT`.
+
 ### Search Input
 
 ```
@@ -325,7 +337,7 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │    [Main Image]   │  │  standing in rain,        │    │
 │  │                   │  │  tokyo skyline..."        │    │
 │  │                   │  │                           │    │
-│  │                   │  │ [SEINEN] [ROUGH SKETCH]   │    │
+│  │                   │  │ [SEINEN] [ROUGH] [SEED:739]│    │
 │  │                   │  ├──────────────────────────┤    │
 │  │                   │  │ ✏️ RE-INK PANEL           │    │
 │  │                   │  │                           │    │
@@ -333,10 +345,10 @@ Large textarea that looks like it belongs in a sketchbook:
 │  │                   │  │                           │    │
 │  │                   │  │ MANGA: [■ SEINEN] [□ SHOJ]│    │
 │  │                   │  │ INK: [■ CLEAN] [□ INKED]  │    │
-│  │                   │  │                           │    │
+│  │                   │  │ [ ] LOCK VARIATION (SEED) │    │
 │  └───────────────────┘  │ [REGENERATE PANEL]        │    │
 │                         └──────────────────────────┘    │
-│  Created: Oct 12, 2023                                  │
+│  Created: Oct 12, 2023   Seed: 7394827419               │
 │                                                         │
 │  INKING PROCESS (version history)                       │
 │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐       │
