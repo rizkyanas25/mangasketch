@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Libre_Franklin, Space_Mono } from "next/font/google";
 import Providers from "@/providers";
+import Header from "@/components/Header";
 import "./globals.css";
 
 const anton = Anton({
@@ -38,11 +39,17 @@ export default function RootLayout({
       lang="en"
       className={`${anton.variable} ${libreFranklin.variable} ${spaceMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
-        <Providers>{children}</Providers>
+      <body className="min-h-full flex flex-col font-sans bg-screentone text-foreground bg-background transition-colors duration-200">
+        <Providers>
+          <Header />
+          <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 md:px-6 py-6 md:py-10">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );
 }
+
 
 

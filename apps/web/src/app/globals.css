@@ -4,72 +4,71 @@
   --font-sans: var(--font-libre-franklin), sans-serif;
   --font-mono: var(--font-space-mono), monospace;
   --font-display: var(--font-anton), sans-serif;
+  
+  /* Map theme colors to dynamic CSS variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
 }
 
 :root {
   --background: #ffffff;
   --foreground: #000000;
+  --screentone-dot: rgba(0, 0, 0, 0.12);
+  --screentone-dot-dense: rgba(0, 0, 0, 0.25);
+  --shadow-color: #000000;
 }
 
-.dark {
-  --background: #000000;
-  --foreground: #ffffff;
+/* Tankobon (Recycled Warm Paper) Theme */
+.theme-tankobon {
+  --background: #faf6ee;
+  --foreground: #221f1d;
+  --screentone-dot: rgba(34, 31, 29, 0.09);
+  --screentone-dot-dense: rgba(34, 31, 29, 0.22);
+  --shadow-color: #221f1d;
+}
+
+/* Midnight (Charcoal Sketchbook) Theme */
+.theme-midnight {
+  --background: #121212;
+  --foreground: #e6e3dd;
+  --screentone-dot: rgba(230, 227, 221, 0.08);
+  --screentone-dot-dense: rgba(230, 227, 221, 0.2);
+  --shadow-color: #e6e3dd;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Screentone background pattern */
 .bg-screentone {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.12) 1.2px, transparent 1.2px);
-  background-size: 8px 8px;
-}
-
-.dark .bg-screentone {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+  background-image: radial-gradient(var(--screentone-dot) 1.2px, transparent 1.2px);
   background-size: 8px 8px;
 }
 
 /* Dense screentone for cards/hover */
 .bg-screentone-dense {
-  background-image: radial-gradient(rgba(0, 0, 0, 0.25) 1.5px, transparent 1.5px);
-  background-size: 6px 6px;
-}
-
-.dark .bg-screentone-dense {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.25) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(var(--screentone-dot-dense) 1.5px, transparent 1.5px);
   background-size: 6px 6px;
 }
 
 /* Neo-Brutalist Manga Shadows */
 .neo-shadow {
-  box-shadow: 4px 4px 0px 0px #000000;
+  box-shadow: 4px 4px 0px 0px var(--shadow-color);
   transition: all 0.15s ease-in-out;
-}
-
-.dark .neo-shadow {
-  box-shadow: 4px 4px 0px 0px #ffffff;
 }
 
 .neo-shadow-sm {
-  box-shadow: 2px 2px 0px 0px #000000;
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
   transition: all 0.15s ease-in-out;
-}
-
-.dark .neo-shadow-sm {
-  box-shadow: 2px 2px 0px 0px #ffffff;
 }
 
 .neo-shadow-lg {
-  box-shadow: 8px 8px 0px 0px #000000;
+  box-shadow: 8px 8px 0px 0px var(--shadow-color);
   transition: all 0.15s ease-in-out;
-}
-
-.dark .neo-shadow-lg {
-  box-shadow: 8px 8px 0px 0px #ffffff;
 }
 
 .neo-shadow-hover {
@@ -77,21 +76,13 @@ body {
 }
 
 .neo-shadow-hover:hover {
-  box-shadow: 6px 6px 0px 0px #000000;
+  box-shadow: 6px 6px 0px 0px var(--shadow-color);
   transform: translate(-2px, -2px);
 }
 
-.dark .neo-shadow-hover:hover {
-  box-shadow: 6px 6px 0px 0px #ffffff;
-}
-
 .neo-shadow-hover:active {
-  box-shadow: 2px 2px 0px 0px #000000;
+  box-shadow: 2px 2px 0px 0px var(--shadow-color);
   transform: translate(2px, 2px);
-}
-
-.dark .neo-shadow-hover:active {
-  box-shadow: 2px 2px 0px 0px #ffffff;
 }
 
 /* G-Pen Sketching Wiggle Animation */
@@ -148,4 +139,5 @@ body {
   background: var(--foreground);
   border: 2px solid var(--background);
 }
+
 
