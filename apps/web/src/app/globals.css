@@ -1,26 +1,151 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-libre-franklin), sans-serif;
+  --font-mono: var(--font-space-mono), monospace;
+  --font-display: var(--font-anton), sans-serif;
+}
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
+
+/* Screentone background pattern */
+.bg-screentone {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.12) 1.2px, transparent 1.2px);
+  background-size: 8px 8px;
+}
+
+.dark .bg-screentone {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+  background-size: 8px 8px;
+}
+
+/* Dense screentone for cards/hover */
+.bg-screentone-dense {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.25) 1.5px, transparent 1.5px);
+  background-size: 6px 6px;
+}
+
+.dark .bg-screentone-dense {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.25) 1.5px, transparent 1.5px);
+  background-size: 6px 6px;
+}
+
+/* Neo-Brutalist Manga Shadows */
+.neo-shadow {
+  box-shadow: 4px 4px 0px 0px #000000;
+  transition: all 0.15s ease-in-out;
+}
+
+.dark .neo-shadow {
+  box-shadow: 4px 4px 0px 0px #ffffff;
+}
+
+.neo-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #000000;
+  transition: all 0.15s ease-in-out;
+}
+
+.dark .neo-shadow-sm {
+  box-shadow: 2px 2px 0px 0px #ffffff;
+}
+
+.neo-shadow-lg {
+  box-shadow: 8px 8px 0px 0px #000000;
+  transition: all 0.15s ease-in-out;
+}
+
+.dark .neo-shadow-lg {
+  box-shadow: 8px 8px 0px 0px #ffffff;
+}
+
+.neo-shadow-hover {
+  transition: all 0.15s ease-in-out;
+}
+
+.neo-shadow-hover:hover {
+  box-shadow: 6px 6px 0px 0px #000000;
+  transform: translate(-2px, -2px);
+}
+
+.dark .neo-shadow-hover:hover {
+  box-shadow: 6px 6px 0px 0px #ffffff;
+}
+
+.neo-shadow-hover:active {
+  box-shadow: 2px 2px 0px 0px #000000;
+  transform: translate(2px, 2px);
+}
+
+.dark .neo-shadow-hover:active {
+  box-shadow: 2px 2px 0px 0px #ffffff;
+}
+
+/* G-Pen Sketching Wiggle Animation */
+@keyframes sketch {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(2px, -2px) rotate(4deg);
+  }
+  40% {
+    transform: translate(-1px, 2px) rotate(-4deg);
+  }
+  60% {
+    transform: translate(3px, 1px) rotate(2deg);
+  }
+  80% {
+    transform: translate(-2px, -1px) rotate(-2deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.animate-sketch {
+  animation: sketch 0.5s ease-in-out infinite;
+}
+
+/* Custom G-Pen stroke indicator */
+@keyframes draw-path {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-draw {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: draw-path 2s ease-in-out forwards infinite;
+}
+
+/* Custom Manga Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+  border-left: 2px solid var(--foreground);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--foreground);
+  border: 2px solid var(--background);
+}
+
