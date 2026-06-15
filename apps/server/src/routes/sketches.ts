@@ -20,7 +20,7 @@ import {
 
 const router = Router();
 
-// Regex to validate UUID format
+// regex to validate uuid format
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
@@ -35,7 +35,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       watermarkPosition
     } = req.body;
 
-    // 1. Validation
+    // 1. do input validation
     if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
       return res.status(400).json({
         code: 'INVALID_PROMPT',
@@ -78,7 +78,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       });
     }
 
-    // Custom Watermark Validation
+    // do custom watermark validation
     if (watermarkText !== undefined && watermarkText !== null) {
       if (typeof watermarkText !== 'string') {
         return res.status(400).json({
@@ -95,7 +95,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
             message: `Watermark name is too long. Max ${MAX_WATERMARK_LENGTH} characters.`
           });
         }
-        // Alphanumeric + spaces only to avoid HTML/SVG injection
+        // alphanumeric and space only to prevent html svg injection
         const alphanumericRegex = /^[a-zA-Z0-9 ]+$/;
         if (!alphanumericRegex.test(trimmed)) {
           return res.status(400).json({
@@ -115,7 +115,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       }
     }
 
-    // 2. Safety Blocklist Check (Layer 1 Safety)
+    // 2. check safety blocklist (layer 1 safety)
     if (checkSafetyBlocklist(prompt)) {
       return res.status(400).json({
         code: 'PROHIBITED_PROMPT',
@@ -123,35 +123,32 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       });
     }
 
-    // 3. Wrap prompt with modifiers and safety guidelines (Layer 2 Safety)
+    // 3. wrap prompt with style and safety (layer 2 safety)
     const wrappedPrompt = wrapPrompt(prompt, mangaStyle, drawingStyle);
 
-    // 4. Generate Image via AI Service
+    // 4. generate image from ai service
     const { buffer: rawBuffer, seedUsed } = await AiService.generateMangaPanel(wrappedPrompt, seed);
 
-    // 4.1 Apply Watermark if watermarkText is provided (can be empty string for a clean stamp)
-    let finalBuffer = rawBuffer;
-    if (watermarkText !== undefined && watermarkText !== null) {
-      finalBuffer = await applyWatermark(
-        rawBuffer,
-        watermarkText,
-        watermarkPosition || 'BOTTOM_RIGHT'
-      );
-    }
+    // 4.1 always apply watermark
+    const finalBuffer = await applyWatermark(
+      rawBuffer,
+      watermarkText || undefined,
+      watermarkPosition || 'BOTTOM_RIGHT'
+    );
 
-    // 5. Handle authenticated vs anonymous persistence
+    // 5. handle auth vs anonymous save
     if (req.user) {
       const userId = req.user.id;
       const timestamp = Date.now();
-      const randomSuffix = crypto.randomBytes(3).toString('hex'); // 6 hex chars for uniqueness
+      const randomSuffix = crypto.randomBytes(3).toString('hex');
       
-      // Opsi 3: user_id/timestamp_suffix.png
+      // option 3: format name user_id/timestamp_suffix.png
       const filepath = `${userId}/${timestamp}_${randomSuffix}.png`;
 
-      // Upload generated buffer to storage
+      // upload generated buffer to storage
       const imageUrl = await SketchService.uploadSketchToStorage(finalBuffer, filepath);
 
-      // Save sketch record to database
+      // save sketch metadata to database
       const savedSketch = await SketchService.saveSketchToDatabase({
         userId,
         prompt,
@@ -172,13 +169,13 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
         seed: savedSketch.seed,
         parentId: savedSketch.parent_id || undefined,
         createdAt: savedSketch.created_at,
-        watermarkText: watermarkText !== undefined ? watermarkText : undefined,
-        watermarkPosition: watermarkPosition || undefined
+        watermarkText: watermarkText || undefined,
+        watermarkPosition: watermarkPosition || 'BOTTOM_RIGHT'
       };
 
       return res.status(201).json(responsePayload);
     } else {
-      // Anonymous user: return image as a Base64 data URL
+      // anonymous user: return image as base64 data url
       const base64Image = finalBuffer.toString('base64');
       const dataUrl = `data:image/png;base64,${base64Image}`;
       const tempId = crypto.randomUUID();
@@ -193,8 +190,8 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
         seed: seedUsed,
         parentId: parentId || undefined,
         createdAt: new Date().toISOString(),
-        watermarkText: watermarkText !== undefined ? watermarkText : undefined,
-        watermarkPosition: watermarkPosition || undefined
+        watermarkText: watermarkText || undefined,
+        watermarkPosition: watermarkPosition || 'BOTTOM_RIGHT'
       };
 
       return res.status(200).json(responsePayload);
@@ -221,6 +218,63 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     return res.status(statusCode).json({
       code: finalCode,
       message: finalMessage
+    });
+  }
+});
+
+// GET /api/sketches - get all sketch for logged in user
+router.get('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        code: 'UNKNOWN_ERROR',
+        message: 'You must be logged in to view your sketchbook.'
+      });
+    }
+
+    const sketches = await SketchService.getUserSketches(req.user.id);
+    return res.status(200).json({ sketches });
+  } catch (error: any) {
+    console.error('[Sketches Router] Error fetching sketches:', error);
+    return res.status(500).json({
+      code: 'UNKNOWN_ERROR',
+      message: 'Failed to fetch your sketchbook.'
+    });
+  }
+});
+
+// GET /api/sketches/:id - get detail sketch and all history version
+router.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        code: 'UNKNOWN_ERROR',
+        message: 'You must be logged in to view sketch details.'
+      });
+    }
+
+    const { id } = req.params;
+    if (!UUID_REGEX.test(id)) {
+      return res.status(400).json({
+        code: 'UNKNOWN_ERROR',
+        message: 'Invalid sketch ID format.'
+      });
+    }
+
+    const history = await SketchService.getSketchWithHistory(id, req.user.id);
+    return res.status(200).json(history);
+  } catch (error: any) {
+    if (error.message === 'SKETCH_NOT_FOUND') {
+      return res.status(404).json({
+        code: 'UNKNOWN_ERROR',
+        message: 'Sketch not found or access denied.'
+      });
+    }
+
+    console.error('[Sketches Router] Error fetching sketch detail:', error);
+    return res.status(500).json({
+      code: 'UNKNOWN_ERROR',
+      message: 'Failed to fetch sketch details.'
     });
   }
 });

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../app';
 import { AiService } from '../services/aiService';
+import { SketchService } from '../services/sketchService';
 import sharp from 'sharp';
 
 // Mock AiService.generateMangaPanel
@@ -26,7 +27,71 @@ vi.mock('../services/aiService', () => {
   };
 });
 
-describe('Sketches API Route', () => {
+// Mock Supabase Auth client to bypass real authentication checks
+vi.mock('../config/supabase', () => {
+  return {
+    supabase: {
+      auth: {
+        getUser: vi.fn().mockImplementation(async (token: string) => {
+          if (token === 'valid-token') {
+            return {
+              data: {
+                user: { id: 'mock-user-id', email: 'test@example.com' }
+              },
+              error: null
+            };
+          }
+          return { data: { user: null }, error: new Error('Invalid token') };
+        })
+      }
+    }
+  };
+});
+
+// Mock SketchService to bypass database access
+vi.mock('../services/sketchService', () => {
+  return {
+    SketchService: {
+      getUserSketches: vi.fn().mockImplementation(async (userId: string) => {
+        return [
+          {
+            id: 'sketch-1-id',
+            parent_id: null,
+            user_id: userId,
+            prompt: 'first sketch',
+            manga_style: 'SHONEN',
+            drawing_style: 'INKED_MANGA',
+            image_url: 'http://example.com/sketch1.png',
+            seed: 12345,
+            created_at: new Date().toISOString()
+          }
+        ];
+      }),
+      getSketchWithHistory: vi.fn().mockImplementation(async (sketchId: string, userId: string) => {
+        if (sketchId === '00000000-0000-0000-0000-000000000000') {
+          throw new Error('SKETCH_NOT_FOUND');
+        }
+        const sketch = {
+          id: sketchId,
+          parent_id: null,
+          user_id: userId,
+          prompt: 'sketch details',
+          manga_style: 'SHONEN',
+          drawing_style: 'INKED_MANGA',
+          image_url: 'http://example.com/sketch1.png',
+          seed: 12345,
+          created_at: new Date().toISOString()
+        };
+        return {
+          sketch,
+          versions: [sketch]
+        };
+      })
+    }
+  };
+});
+
+describe('Sketches API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -107,8 +172,84 @@ describe('Sketches API Route', () => {
       expect(res.body.watermarkText).toBe('NY');
       expect(res.body.watermarkPosition).toBe('BOTTOM_RIGHT');
       
-      // Verify mock was called correctly
       expect(AiService.generateMangaPanel).toHaveBeenCalledTimes(1);
+    });
+
+    it('should generate sketch with default watermark settings if none are provided', async () => {
+      const res = await request(app)
+        .post('/api/sketches')
+        .send({
+          prompt: 'cyberpunk warrior',
+          mangaStyle: 'SHONEN',
+          drawingStyle: 'INKED_MANGA'
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.saved).toBe(false);
+      expect(res.body.imageUrl).toContain('data:image/png;base64,');
+      expect(res.body.watermarkText).toBeUndefined();
+      expect(res.body.watermarkPosition).toBe('BOTTOM_RIGHT');
+      
+      expect(AiService.generateMangaPanel).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('GET /api/sketches', () => {
+    it('should return 401 if user is not authenticated', async () => {
+      const res = await request(app).get('/api/sketches');
+      expect(res.status).toBe(401);
+      expect(res.body.message).toContain('logged in');
+    });
+
+    it('should return 200 and sketches list for authenticated user', async () => {
+      const res = await request(app)
+        .get('/api/sketches')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.sketches).toBeDefined();
+      expect(res.body.sketches.length).toBe(1);
+      expect(res.body.sketches[0].prompt).toBe('first sketch');
+      expect(SketchService.getUserSketches).toHaveBeenCalledWith('mock-user-id');
+    });
+  });
+
+  describe('GET /api/sketches/:id', () => {
+    it('should return 401 if user is not authenticated', async () => {
+      const res = await request(app).get('/api/sketches/11111111-1111-1111-1111-111111111111');
+      expect(res.status).toBe(401);
+      expect(res.body.message).toContain('logged in');
+    });
+
+    it('should return 400 if sketch ID format is not a UUID', async () => {
+      const res = await request(app)
+        .get('/api/sketches/invalid-uuid')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Invalid sketch ID format');
+    });
+
+    it('should return 404 if sketch is not found', async () => {
+      const res = await request(app)
+        .get('/api/sketches/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toContain('not found or access denied');
+    });
+
+    it('should return 200 and sketch history for authenticated user and valid UUID', async () => {
+      const targetId = '22222222-2222-2222-2222-222222222222';
+      const res = await request(app)
+        .get(`/api/sketches/${targetId}`)
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.sketch).toBeDefined();
+      expect(res.body.versions).toBeDefined();
+      expect(res.body.sketch.id).toBe(targetId);
+      expect(SketchService.getSketchWithHistory).toHaveBeenCalledWith(targetId, 'mock-user-id');
     });
   });
 });

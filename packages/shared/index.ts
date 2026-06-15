@@ -84,3 +84,15 @@ export interface Sketch {
   seed: number;
   created_at: string;
 }
+
+// API response payload for fetching the sketchbook gallery
+export interface GetSketchesResponse {
+  sketches: Sketch[];
+}
+
+// API response payload for fetching sketch details and version history
+export interface GetSketchDetailResponse {
+  sketch: Sketch;
+  versions: Sketch[]; // Version history, including original and all variations
+}
+
