@@ -18,7 +18,7 @@ export default function Header() {
   if (pathname === '/auth/callback') return null;
 
   const themes = [
-    { id: 'light', name: 'G-Pen Ink', icon: FileSharp },
+    { id: 'light', name: 'Light Ink', icon: FileSharp },
     { id: 'tankobon', name: 'Recycled Book', icon: BookOpenSharp },
     { id: 'midnight', name: 'Midnight Moon', icon: Moon },
   ] as const;
@@ -40,13 +40,11 @@ export default function Header() {
 
         {/* Center Section: Cartoonish Binder Tab (Visible if Logged In) */}
         {user && (
-          <div className="absolute left-1/2 transform -translate-x-1/2 bottom-[-22px] z-30">
-            <Link 
-              href="/sketches" 
-              className={`block font-display text-xs md:text-sm tracking-wider px-5 py-2 border-2 border-foreground bg-background text-foreground transition-all rotate-[-2.5deg] neo-shadow-sm hover:-translate-y-0.5 hover:neo-shadow active:translate-y-0 cursor-pointer uppercase ${
-                isSketchesPage 
-                  ? "bg-screentone-dense" 
-                  : "hover:bg-screentone"
+          <div className='absolute left-1/2 transform -translate-x-1/2 bottom-[-22px] z-30'>
+            <Link
+              href='/sketches'
+              className={`block font-display text-lg tracking-wider px-5 py-2 border-2 border-foreground bg-background text-foreground transition-all rotate-[-2.5deg] neo-shadow-sm hover:-translate-y-0.5 hover:neo-shadow active:translate-y-0 cursor-pointer uppercase ${
+                isSketchesPage ? 'bg-screentone-dense' : 'hover:bg-screentone'
               }`}
             >
               MY SKETCHBOOK
@@ -112,7 +110,7 @@ export default function Header() {
                         setDropdownOpen(false);
                         logout();
                       }}
-                      className="w-full font-display py-2 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase text-sm"
+                      className='w-full font-display py-2 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase text-sm'
                     >
                       LOGOUT
                     </button>
