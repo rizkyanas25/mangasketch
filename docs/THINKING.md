@@ -200,7 +200,7 @@ I use single repository with `apps/web` and `apps/server` folder instead of two 
 
 - **Single clone, single README**. Reviewer can clone once, run `npm install` at root, and start both frontend and backend. This help achieve the "running in under 15 minutes" target.
 - **Unified commit history**. Reviewer can see the full development timeline in one place. With two repos, the story is scattered and harder to follow.
-- **Shared types**. We share TypeScript models (like `Sketch`, request/response payloads, and error contracts) using a local workspace package `@mangasketch/shared` located at `packages/shared`. This keeps both frontend and backend fully in sync without publishing to npm.
+- **Shared workspace package**. We share TypeScript definitions, data models, validation constants, and API contracts using a local workspace package `@mangasketch/shared` located at `packages/shared`. This acts as a single source of truth to keep both frontend and backend fully in sync without publishing to npm.
 - **Simpler CI/CD**. One repo to manage, one set of environment variables to configure.
 
 Deploy is still independent. Vercel and Railway both support monorepo by setting "Root Directory" to `apps/web` and `apps/server` respectively. So I get the benefit of monorepo without the drawback of coupled deployment.

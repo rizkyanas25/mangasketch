@@ -1,8 +1,45 @@
 // Shared TypeScript Types & Constants for MangaSketch
 
-export type MangaStyle = 'SHONEN' | 'SEINEN' | 'SHOJO' | 'CHIBI';
+// --- 1. Style Presets ---
+export const MANGA_STYLES = ['SHONEN', 'SEINEN', 'SHOJO', 'CHIBI'] as const;
+export type MangaStyle = typeof MANGA_STYLES[number];
 
-export type DrawingStyle = 'ROUGH_SKETCH' | 'CLEAN_LINE_ART' | 'INKED_MANGA' | 'DETAILED_ILLUSTRATION';
+export const DRAWING_STYLES = [
+  'ROUGH_SKETCH',
+  'CLEAN_LINE_ART',
+  'INKED_MANGA',
+  'DETAILED_ILLUSTRATION'
+] as const;
+export type DrawingStyle = typeof DRAWING_STYLES[number];
+
+// --- 2. Constraints ---
+export const MAX_PROMPT_LENGTH = 500;
+
+// --- 3. Safety (SFW / PG-13 protection) ---
+export const BLOCKED_KEYWORDS = [
+  'porn', 'nsfw', 'hentai', 'naked', 'nudity', 'nude', 'sex', 
+  'orgy', 'rape', 'dildo', 'boobs', 'vagina', 'penis', 'asshole',
+  'gore', 'torture', 'mutilation', 'pedophile', 'incest'
+];
+
+// --- 4. Errors ---
+export const STANDARD_ERRORS = [
+  'INVALID_PROMPT',
+  'PROHIBITED_PROMPT',
+  'AI_TIMEOUT',
+  'AI_PROVIDER_ERROR',
+  'RATE_LIMITED',
+  'UNKNOWN_ERROR'
+] as const;
+export type ApiErrorCode = typeof STANDARD_ERRORS[number];
+
+// Standard payload for API error responses
+export interface ApiErrorResponse {
+  code: ApiErrorCode;
+  message: string;
+}
+
+// --- 5. Data Transmission Payloads ---
 
 // API request payload for generating/re-inking sketches
 export interface GenerateSketchRequest {
@@ -37,10 +74,4 @@ export interface Sketch {
   image_url: string;
   seed: number;
   created_at: string;
-}
-
-// Standard payload for API error responses
-export interface ApiErrorResponse {
-  code: 'INVALID_PROMPT' | 'PROHIBITED_PROMPT' | 'AI_TIMEOUT' | 'AI_PROVIDER_ERROR' | 'RATE_LIMITED' | 'UNKNOWN_ERROR';
-  message: string;
 }

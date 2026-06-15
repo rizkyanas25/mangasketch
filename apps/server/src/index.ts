@@ -1,10 +1,7 @@
+import './config/env';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables from the root .env file
-dotenv.config({ path: path.join(__dirname, '../../../.env') });
+import sketchesRouter from './routes/sketches';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -18,6 +15,9 @@ app.use(cors({
 
 // Parse JSON request bodies
 app.use(express.json());
+
+// Mount routes
+app.use('/api/sketches', sketchesRouter);
 
 // Basic health check route
 app.get('/', (req, res) => {

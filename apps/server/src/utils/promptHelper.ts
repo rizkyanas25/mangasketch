@@ -1,13 +1,4 @@
-import { MangaStyle, DrawingStyle } from '@mangasketch/shared';
-
-// Layer 1: Safety blocklist keywords (SFW / PG-13 protection)
-// Focuses on NSFW, pornography, hate speech, and extreme gore,
-// while allowing standard manga action terms (katana, sword, fight, etc.)
-const BLOCKED_KEYWORDS = [
-  'porn', 'nsfw', 'hentai', 'naked', 'nudity', 'nude', 'sex', 
-  'orgy', 'rape', 'dildo', 'boobs', 'vagina', 'penis', 'asshole',
-  'gore', 'torture', 'mutilation', 'pedophile', 'incest'
-];
+import { MangaStyle, DrawingStyle, BLOCKED_KEYWORDS } from '@mangasketch/shared';
 
 /**
  * Checks if a user prompt contains any blocked keywords (Case Insensitive).
