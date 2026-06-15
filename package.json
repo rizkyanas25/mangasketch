@@ -4,7 +4,8 @@
   "private": true,
   "description": "AI-powered manga sketch generator",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=apps/server & npm run dev --workspace=apps/web",

@@ -86,10 +86,10 @@ mangasketch/
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `POST` | `/api/generate` | Optional | Generate manga sketch from prompt |
-| `GET` | `/api/gallery` | Required | List user's generations (paginated) |
-| `GET` | `/api/gallery/:id` | Required | Get single generation detail |
-| `DELETE` | `/api/gallery/:id` | Required | Delete a generation |
+| `POST` | `/api/sketches` | Optional | Generate manga sketch from prompt |
+| `GET` | `/api/sketches` | Required | List user's sketches (paginated) |
+| `GET` | `/api/sketches/:id` | Required | Get single sketch detail & version history |
+| `DELETE` | `/api/sketches/:id` | Required | Delete a sketch |
 
 ---
 

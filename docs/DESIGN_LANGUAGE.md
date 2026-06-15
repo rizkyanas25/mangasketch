@@ -274,7 +274,7 @@ Large textarea that looks like it belongs in a sketchbook:
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 2. Gallery Page (`/gallery`)
+### 2. Sketchbook Page (`/sketches`)
 
 **Naming: "MY SKETCHBOOK"** (from Stitch design)
 
@@ -307,7 +307,7 @@ Large textarea that looks like it belongs in a sketchbook:
 - Infinite scroll with "INKING MORE PANELS..." text
 - Empty state: manga illustration + "No sketches yet. Start creating!"
 
-### 3. Detail Page (`/gallery/[id]`)
+### 3. Detail Page (`/sketches/[id]`)
 
 **Simplified from Stitch**: Remove stroke weight slider, screentone density selector, production data. Keep: image, prompt, re-generate form, version history.
 
@@ -460,38 +460,46 @@ Use manga/mangaka terminology throughout the UI instead of generic tech terms:
 
 ---
 
-## CSS Considerations
+## CSS & Styling Considerations
 
-### Screentone Pattern (CSS)
+Tailwind CSS (v4) is our **primary styling method**. We will maximize Tailwind utility classes for all elements (layout, colors, spacing, typography, states, transitions). Custom CSS is reserved only for features that Tailwind cannot cover, which will be implemented in `src/app/globals.css`.
+
+### 1. Tailwind Implementation Examples
+* **Manga Panel Cards**: `border-2 border-black bg-white rounded-none hover:bg-neutral-lighter active:scale-[0.98] transition-all`
+* **Primary Speech Button**: `bg-black text-white px-6 py-3 font-semibold uppercase hover:bg-white hover:text-black hover:border-2 hover:border-black active:scale-95 transition-all`
+* **Toggle Chips**: `border-2 border-black px-4 py-2 font-mono text-xs uppercase transition-colors`
+* **Container**: `max-w-6xl mx-auto px-4`
+
+### 2. Custom CSS Utilities (in globals.css)
+For mid-tones, global sharp resets, and custom sketches:
 
 ```css
-.screentone {
+/* Screentone Dot Pattern Overlay */
+.bg-screentone {
   background-image: radial-gradient(circle, #000 0.5px, transparent 0.5px);
   background-size: 8px 8px;
   opacity: 0.05;
 }
-```
 
-### Manga Panel Border
-
-```css
-.manga-panel {
-  border: 2px solid #000;
-  border-radius: 0;
-  background: #fff;
-}
-```
-
-### Sharp Corners Globally
-
-```css
+/* Global Reset: Force sharp corners on all elements (including third-party libraries) */
 * {
-  border-radius: 0 !important; /* manga panels have no curves */
+  border-radius: 0px !important;
+}
+
+/* Custom G-pen Sketching Animation */
+@keyframes sketch {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2px, -3px) rotate(5deg); }
+  50% { transform: translate(-1px, 2px) rotate(-5deg); }
+  75% { transform: translate(3px, 1px) rotate(3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.animate-sketching {
+  animation: sketch 0.5s infinite linear;
 }
 ```
 
-### Font Loading
-
+### 3. Font Loading
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Libre+Franklin:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
 ```

@@ -24,7 +24,7 @@ User Browser
      ├── 1. User type prompt + select Manga Style (Shonen, Seinen, etc) & Drawing Style (Rough, Inked, etc)
      │
      ├── 2. Frontend send POST request to backend
-     │      POST /api/generate
+     │      POST /api/sketches
      │      Body: { prompt, mangaStyle, drawingStyle }
      │      Header: Authorization: Bearer <jwt> (if logged in)
      │
@@ -58,44 +58,44 @@ Express Backend (Railway)
 User Browser
      │
      └── 9. Frontend display the generated manga sketch
-            ├── Logged in: "Saved to gallery ✓" + image appear in gallery
-            └── Anonymous: "Login to save this to your gallery"
+            ├── Logged in: "Saved to sketchbook ✓" + image appear in sketchbook
+            └── Anonymous: "Login to save this to your sketchbook"
 ```
 
 ### Re-generation Flow
 
-Re-generated images are not just separate entries. They are **linked to the original generation** via `parent_id`. This way, user can see the evolution of their idea.
+Re-generated images are not just separate entries. They are **linked to the original sketch** via `parent_id`. This way, user can see the evolution of their idea.
 
 ```
-Gallery (/gallery)
+Sketchbook (/sketches)
      │
-     ├── Each card show the latest version of that generation
-     ├── If a generation has variations, card show version count (e.g. "3 versions")
+     ├── Each card show the latest version of that sketch
+     ├── If a sketch has variations, card show version count (e.g. "3 versions")
      │
      ├── User click on a card
      │
      ▼
-Detail Page (/gallery/[id])
+Detail Page (/sketches/[id])
      │
-     ├── Show all versions of this generation (latest first, default opened)
+     ├── Show all versions of this sketch (latest first, default opened)
      ├── User can browse previous versions
      ├── Prompt from selected version is pre-filled in the form
      ├── User edit the prompt
-     ├── Click "Re-generate"
+     ├── Click "Re-ink Panel"
      │
      ▼
      Same flow as above (step 2-9)
      │
-     └── New image saved with parent_id pointing to original generation
-         └── Gallery card update to show new version as the latest
+     └── New image saved with parent_id pointing to original sketch
+         └── Sketchbook card update to show new version as the latest
 ```
 
 **Database structure for this:**
 
 ```sql
-generations table:
+sketches table:
   id            UUID (primary key)
-  parent_id     UUID (nullable, references generations.id)
+  parent_id     UUID (nullable, references sketches.id)
   user_id       UUID
   prompt        TEXT
   manga_style   TEXT
@@ -104,9 +104,9 @@ generations table:
   created_at    TIMESTAMPTZ
 ```
 
-- First generation: `parent_id = null`
-- Re-generation: `parent_id = original generation id`
-- Gallery query: group by root parent, show latest version, **cursor-based pagination** (load more as user scroll)
+- First sketch: `parent_id = null`
+- Re-ink sketch: `parent_id = original sketch id`
+- Sketchbook query: group by root parent, show latest version, **cursor-based pagination** (load more as user scroll)
 - Detail query: get all rows where `id = X` or `parent_id = X`, order by `created_at DESC`
 
 ### Safety Architecture (PG-13 Guardrails)
@@ -199,7 +199,7 @@ I use single repository with `apps/web` and `apps/server` folder instead of two 
 
 - **Single clone, single README**. Reviewer can clone once, run `npm install` at root, and start both frontend and backend. This help achieve the "running in under 15 minutes" target.
 - **Unified commit history**. Reviewer can see the full development timeline in one place. With two repos, the story is scattered and harder to follow.
-- **Shared types**. If I need to share TypeScript types between frontend and backend (like API response shapes), I can do it directly without publishing npm package.
+- **Shared types**. We share TypeScript models (like `Sketch`, request/response payloads, and error contracts) using a local workspace package `@mangasketch/shared` located at `packages/shared`. This keeps both frontend and backend fully in sync without publishing to npm.
 - **Simpler CI/CD**. One repo to manage, one set of environment variables to configure.
 
 Deploy is still independent. Vercel and Railway both support monorepo by setting "Root Directory" to `apps/web` and `apps/server` respectively. So I get the benefit of monorepo without the drawback of coupled deployment.
