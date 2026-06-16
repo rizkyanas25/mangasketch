@@ -13,7 +13,9 @@ app.use(cors({
 }));
 
 // Parse JSON request bodies
-app.use(express.json());
+// app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
 
 // Mount routes
 app.use('/api/sketches', sketchesRouter);

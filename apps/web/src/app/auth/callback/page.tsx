@@ -14,6 +14,7 @@ export default function AuthCallback() {
   const [status, setStatus] = useState("Stabilizing ink flow. Authenticating mangaka.");
   const [submitting, setSubmitting] = useState(false);
   const uploadStarted = useRef(false);
+  const uploadSucceeded = useRef(false);
 
   useEffect(() => {
     if (loading) return;
@@ -25,7 +26,7 @@ export default function AuthCallback() {
 
     const pendingDataStr = localStorage.getItem("mangasketch_pending_upload");
     if (!pendingDataStr || uploadStarted.current) {
-      if (!submitting) {
+      if (!submitting && !uploadSucceeded.current) {
         router.push("/");
       }
       return;
@@ -61,6 +62,7 @@ export default function AuthCallback() {
 
         if (response.ok) {
           localStorage.removeItem("mangasketch_pending_upload");
+          uploadSucceeded.current = true;
           router.push("/sketches?toast=recovered");
         } else {
           console.error("Failed to recover sketch:", await response.text());
@@ -80,8 +82,9 @@ export default function AuthCallback() {
   }, [loading, user, session, router, submitting]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 text-foreground">
+    <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center p-6 text-foreground">
       <div className="bg-background border-4 border-foreground p-8 max-w-md w-full text-center neo-shadow">
+
         <div className="flex justify-center mb-4 text-foreground">
           <MagicEdit className="w-12 h-12 animate-sketch" />
         </div>

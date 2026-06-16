@@ -15,7 +15,10 @@ import {
   STANDARD_ERRORS,
   WatermarkPosition,
   WATERMARK_POSITIONS,
-  MAX_WATERMARK_LENGTH
+  MAX_WATERMARK_LENGTH,
+  GetSketchesResponse,
+  GetSketchDetailResponse,
+  DeleteSketchResponse
 } from '@mangasketch/shared';
 
 const router = Router();
@@ -281,7 +284,8 @@ router.get('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     }
 
     const sketches = await SketchService.getUserSketches(req.user.id);
-    return res.status(200).json({ sketches });
+    const responsePayload: GetSketchesResponse = { sketches };
+    return res.status(200).json(responsePayload);
   } catch (error: any) {
     console.error('[Sketches Router] Error fetching sketches:', error);
     return res.status(500).json({
@@ -310,7 +314,8 @@ router.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
     }
 
     const history = await SketchService.getSketchWithHistory(id, req.user.id);
-    return res.status(200).json(history);
+    const responsePayload: GetSketchDetailResponse = history;
+    return res.status(200).json(responsePayload);
   } catch (error: any) {
     if (error.message === 'SKETCH_NOT_FOUND') {
       return res.status(404).json({
@@ -327,4 +332,42 @@ router.get('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// DELETE /api/sketches/:id - delete sketch and all its history versions if it's a parent
+router.delete('/:id', optionalAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        code: 'UNAUTHORIZED',
+        message: 'You must be logged in to delete sketches.'
+      });
+    }
+
+    const { id } = req.params;
+    if (!UUID_REGEX.test(id)) {
+      return res.status(400).json({
+        code: 'INVALID_SKETCH_ID',
+        message: 'Invalid sketch ID format.'
+      });
+    }
+
+    await SketchService.deleteSketch(id, req.user.id);
+    const responsePayload: DeleteSketchResponse = { success: true, message: 'Sketch erased successfully.' };
+    return res.status(200).json(responsePayload);
+  } catch (error: any) {
+    if (error.message === 'SKETCH_NOT_FOUND') {
+      return res.status(404).json({
+        code: 'SKETCH_NOT_FOUND',
+        message: 'Sketch not found or access denied.'
+      });
+    }
+
+    console.error('[Sketches Router] Error deleting sketch:', error);
+    return res.status(500).json({
+      code: 'UNKNOWN_ERROR',
+      message: 'Failed to erase sketch.'
+    });
+  }
+});
+
 export default router;
+

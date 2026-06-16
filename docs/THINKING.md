@@ -301,6 +301,12 @@ I prioritize based on what the assignment value most: **working software with re
     I upgrade simple style chips to custom grid buttons with AI-generated transparent watermark background, so user can better understand the context/example of each style, even though the final generated output might not match it 100%.
   - **Hanko Stamp on Brand Logo**: I add the HankoStamp behind the brand logo text in the Header. This makes the brand logo look more authentic and emphasizes that the Hanko stamp is the signature mark of MangaSketch, especially since the Katakana inside the stamp spells "MangaSketch".
 
+- **[UPDATED ON DEVELOPMENT - PHASE 3 REFINING HOME]**:
+  - **Dynamic Generate CTA & Clear Generation Intent**:
+    To prevent user confusion after a successful sketch generation on the Home page (`/`), the primary submit button dynamically changes from `"SKETCH THIS IDEA"` to `"SKETCH A NEW IDEA"`, accompanied by an explicit subtext: `(* starts a new sketch family in your sketchbook)`. This visual feedback clarifies that clicking it starts a fresh concept branch, preventing users from mistakenly thinking they are modifying or overriding their current canvas result.
+  - **Direct Evolution Loop (Iterate & Resketch CTA)**:
+    Instead of forcing users to navigate through the `"MY SKETCHBOOK"` gallery to view, edit, or regenerate a sketch, I introduced a prominent `"ITERATE & RESKETCH THIS PANEL"` CTA under the canvas immediately post-generation. This gives authenticated users an instant, direct path to jump into the detail view (`/sketches/[id]`), where they can immediately fork, modify, or lock the composition seed of that panel.
+
 #### Phase 4: Polish + Deploy (Day 5)
 
 - UI polish, make it feel like real product, not assignment

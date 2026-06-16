@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useActionState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   MangaStyle,
   DrawingStyle,
@@ -170,10 +171,17 @@ export default function Home() {
           <button
             type='submit'
             disabled={isPending || !prompt.trim()}
-            className='w-full font-display text-lg md:text-xl py-4 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none uppercase flex items-center justify-center gap-2'
+            className='w-full font-display border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none uppercase flex flex-col items-center justify-center gap-1 min-h-[76px] px-4 py-2 group'
           >
-            <MagicEdit className='w-6 h-6' />
-            SKETCH THIS IDEA
+            <span className='flex items-center justify-center gap-2 text-lg md:text-xl'>
+              <MagicEdit className='w-6 h-6' />
+              {state.data?.imageUrl ? 'SKETCH A NEW IDEA' : 'SKETCH THIS IDEA'}
+            </span>
+            {state.data?.imageUrl && (
+              <span className='font-mono text-[9px] text-background/60 group-hover:text-foreground/60 tracking-wider lowercase normal-case select-none'>
+                (* starts a new sketch family in your sketchbook)
+              </span>
+            )}
           </button>
         </form>
 
@@ -193,8 +201,9 @@ export default function Home() {
               <img
                 src={state.data.imageUrl}
                 alt='Generated Manga Panel'
-                className='w-full h-full object-cover'
+                className='w-full h-full object-contain'
               />
+
             ) : (
               <div className='text-center max-w-sm p-6'>
                 <div className='font-display text-5xl text-foreground/20 mb-4 select-none'>
@@ -208,6 +217,17 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Iterate CTA (Only shown to authenticated users after generating a sketch) */}
+          {state.data?.imageUrl && user && (
+            <Link
+              href={`/sketches/${state.data.id}`}
+              className='mt-4 w-full font-display text-lg md:text-xl py-4 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all uppercase flex items-center justify-center gap-2'
+            >
+              <MagicEdit className='w-5 h-5 animate-sketch' />
+              ITERATE & RESKETCH THIS PANEL
+            </Link>
+          )}
         </section>
       </div>
 

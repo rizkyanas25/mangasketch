@@ -8,6 +8,12 @@
   /* Map theme colors to dynamic CSS variables */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-destructive: #D9383A;
+  --color-neutral: #767676;
+  --color-neutral-light: #E5E5E5;
+  --color-neutral-lighter: #F5F5F5;
+  
+  --scale-120: 1.2;
 }
 
 :root {
@@ -47,6 +53,31 @@ body {
   color: var(--foreground);
   overflow-x: hidden;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+main {
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable;
+}
+
+/* Fallback CSS utility classes for Tailwind v4 and browser/compiler hot-reload caching */
+.text-neutral {
+  color: #767676;
+}
+.bg-neutral-light {
+  background-color: #E5E5E5;
+}
+.bg-neutral-lighter {
+  background-color: #F5F5F5;
+}
+.border-neutral-light {
+  border-color: #E5E5E5;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.hover\:text-destructive:hover {
+  color: #D9383A !important;
 }
 
 /* Screentone background pattern */

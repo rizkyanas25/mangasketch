@@ -1,6 +1,6 @@
 'use server';
 
-import { GenerateSketchResponse } from "@mangasketch/shared";
+import { GenerateSketchResponse, DeleteSketchResponse } from "@mangasketch/shared";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -55,7 +55,38 @@ export async function generateSketchAction(
 
     const data = await response.json() as GenerateSketchResponse;
     return { data, error: null };
-  } catch (err: any) {
-    return { data: null, error: err.message || "An unknown network error occurred." };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "An unknown network error occurred.";
+    return { data: null, error: errorMsg };
   }
 }
+
+export async function deleteSketchAction(
+  sketchId: string,
+  token: string
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/sketches/${sketchId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMsg = "Failed to erase sketch.";
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.message || errorMsg;
+      } catch {}
+      return { success: false, error: errorMsg };
+    }
+
+    await response.json() as DeleteSketchResponse;
+    return { success: true, error: null };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "An unknown network error occurred.";
+    return { success: false, error: errorMsg };
+  }
+}
+
