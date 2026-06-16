@@ -86,6 +86,22 @@ vi.mock('../services/sketchService', () => {
           sketch,
           versions: [sketch]
         };
+      }),
+      uploadSketchToStorage: vi.fn().mockImplementation(async (buffer: Buffer, filepath: string) => {
+        return 'http://example.com/recovered-sketch.png';
+      }),
+      saveSketchToDatabase: vi.fn().mockImplementation(async (sketchData: any) => {
+        return {
+          id: 'recovered-sketch-id',
+          user_id: sketchData.userId,
+          prompt: sketchData.prompt,
+          manga_style: sketchData.mangaStyle,
+          drawing_style: sketchData.drawingStyle,
+          image_url: sketchData.imageUrl,
+          seed: sketchData.seed,
+          parent_id: sketchData.parentId || null,
+          created_at: new Date().toISOString()
+        };
       })
     }
   };
@@ -191,6 +207,29 @@ describe('Sketches API Routes', () => {
       expect(res.body.watermarkPosition).toBe('BOTTOM_RIGHT');
       
       expect(AiService.generateMangaPanel).toHaveBeenCalledTimes(1);
+    });
+
+    it('should save pre-generated anonymous sketch without AI call if imageUrl is provided and auth is valid', async () => {
+      const res = await request(app)
+        .post('/api/sketches')
+        .set('Authorization', 'Bearer valid-token')
+        .send({
+          prompt: 'recovered sketch',
+          mangaStyle: 'SHONEN',
+          drawingStyle: 'INKED_MANGA',
+          imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          seed: 99
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.saved).toBe(true);
+      expect(res.body.id).toBe('recovered-sketch-id');
+      expect(res.body.imageUrl).toBe('http://example.com/recovered-sketch.png');
+      expect(res.body.seed).toBe(99);
+      
+      expect(AiService.generateMangaPanel).not.toHaveBeenCalled();
+      expect(SketchService.uploadSketchToStorage).toHaveBeenCalled();
+      expect(SketchService.saveSketchToDatabase).toHaveBeenCalled();
     });
   });
 

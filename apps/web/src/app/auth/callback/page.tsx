@@ -1,21 +1,83 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
 
 import { MagicEdit } from "pixelarticons/react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 export default function AuthCallback() {
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const router = useRouter();
+  const [status, setStatus] = useState("Stabilizing ink flow. Authenticating mangaka.");
+  const [submitting, setSubmitting] = useState(false);
+  const uploadStarted = useRef(false);
 
   useEffect(() => {
-    if (!loading) {
-      // Redirect to homepage once session is loaded
+    if (loading) return;
+
+    if (!user) {
       router.push("/");
+      return;
     }
-  }, [loading, user, router]);
+
+    const pendingDataStr = localStorage.getItem("mangasketch_pending_upload");
+    if (!pendingDataStr || uploadStarted.current) {
+      if (!submitting) {
+        router.push("/");
+      }
+      return;
+    }
+
+    const recoverSketch = async () => {
+      uploadStarted.current = true;
+      setSubmitting(true);
+      setStatus("RECOVERING PREVIOUS SKETCH... SAVING TO SKETCHBOOK.");
+
+      try {
+        const pendingData = JSON.parse(pendingDataStr);
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (session?.access_token) {
+          headers["Authorization"] = `Bearer ${session.access_token}`;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/sketches`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            prompt: pendingData.prompt,
+            mangaStyle: pendingData.mangaStyle,
+            drawingStyle: pendingData.drawingStyle,
+            seed: pendingData.seed,
+            imageUrl: pendingData.imageUrl,
+            watermarkText: pendingData.watermarkText,
+            watermarkPosition: pendingData.watermarkPosition,
+          }),
+        });
+
+        if (response.ok) {
+          localStorage.removeItem("mangasketch_pending_upload");
+          router.push("/sketches?toast=recovered");
+        } else {
+          console.error("Failed to recover sketch:", await response.text());
+          localStorage.removeItem("mangasketch_pending_upload");
+          router.push("/");
+        }
+      } catch (err) {
+        console.error("Error recovering sketch:", err);
+        localStorage.removeItem("mangasketch_pending_upload");
+        router.push("/");
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    recoverSketch();
+  }, [loading, user, session, router, submitting]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 text-foreground">
@@ -24,10 +86,10 @@ export default function AuthCallback() {
           <MagicEdit className="w-12 h-12 animate-sketch" />
         </div>
         <h1 className="font-display text-2xl mb-2 tracking-wide uppercase">
-          INKING IDENTITY...
+          {submitting ? "SECURING ARTWORK..." : "INKING IDENTITY..."}
         </h1>
         <p className="font-mono text-sm text-neutral">
-          Stabilizing ink flow. Authenticating mangaka.
+          {status}
         </p>
       </div>
     </div>

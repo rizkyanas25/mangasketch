@@ -14,6 +14,7 @@ import InkLoader from '@/components/InkLoader';
 import ErrorPanel from '@/components/ErrorPanel';
 import { useUiStore } from '@/store/uiStore';
 import { GoogleIcon } from '@/components/GoogleIcon';
+import { HankoStamp } from '@/components/HankoStamp';
 
 export default function Home() {
   const { session, user, login } = useAuth();
@@ -47,12 +48,29 @@ export default function Home() {
     }
   }, [isPending]);
 
-
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= 500) {
       setPrompt(e.target.value);
     }
   };
+
+  // Auto-cache anonymous sketch data to localStorage immediately upon generation
+  useEffect(() => {
+    if (state.data?.imageUrl && !state.data.saved && !user) {
+      localStorage.setItem(
+        'mangasketch_pending_upload',
+        JSON.stringify({
+          prompt: state.data.prompt,
+          mangaStyle: state.data.mangaStyle,
+          drawingStyle: state.data.drawingStyle,
+          seed: state.data.seed,
+          imageUrl: state.data.imageUrl,
+          watermarkText: state.data.watermarkText,
+          watermarkPosition: state.data.watermarkPosition,
+        }),
+      );
+    }
+  }, [state.data, user]);
 
   return (
     <div className='flex flex-col gap-6 md:gap-10'>
@@ -80,14 +98,17 @@ export default function Home() {
         {/* Right: Large decorative tilted manga panel — overflows the section with strict 3:4 aspect ratio */}
         <div className='hidden md:block absolute -right-6 top-1/2 -translate-y-1/2 w-[220px] aspect-[3/4] z-20 pointer-events-none'>
           <div className='w-full h-full border-4 border-foreground neo-shadow-lg bg-background rotate-[4deg] relative overflow-hidden'>
-            <div className='absolute inset-0 bg-screentone-dense opacity-20' />
-            <div className='absolute inset-0 flex items-center justify-center'>
-              <span className='font-display text-[120px] text-foreground/[0.06] select-none leading-none'>
-                漫
-              </span>
-            </div>
-            {/* Placeholder — swap this img src with your manga panel later */}
-            {/* <img src="/hero-panel.png" alt="" className="w-full h-full object-cover" /> */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src='/assets/hero-panel.png'
+              alt='Manga Panel Concept'
+              className='w-full h-full object-cover relative z-0'
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {/* Tilted panel Hanko Stamp signature */}
+            <HankoStamp className='absolute bottom-3 right-3 w-10 h-10 z-20 opacity-95' />
           </div>
         </div>
       </section>
@@ -160,7 +181,9 @@ export default function Home() {
           ref={canvasRef}
           className='lg:flex-[7] flex flex-col bg-background border-4 border-foreground neo-shadow aspect-[3/4] p-4'
         >
-          <div className={`flex-1 w-full flex flex-col items-center justify-center border-4 border-dashed relative transition-colors overflow-hidden ${state.data?.imageUrl ? 'border-foreground' : 'border-foreground/30'}`}>
+          <div
+            className={`flex-1 w-full flex flex-col items-center justify-center border-4 border-dashed relative transition-colors overflow-hidden ${state.data?.imageUrl ? 'border-foreground' : 'border-foreground/30'}`}
+          >
             {isPending ? (
               <InkLoader />
             ) : state.error ? (

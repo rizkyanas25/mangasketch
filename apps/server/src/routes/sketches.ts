@@ -32,7 +32,8 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       parentId,
       seed,
       watermarkText,
-      watermarkPosition
+      watermarkPosition,
+      imageUrl
     } = req.body;
 
     // 1. do input validation
@@ -113,6 +114,53 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
           message: 'Invalid watermark position selected.'
         });
       }
+    }
+
+    // 1.5 Handle post-auth recovery upload of a pre-generated anonymous sketch
+    if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('data:image/png;base64,')) {
+      if (!req.user) {
+        return res.status(401).json({
+          code: 'UNAUTHORIZED',
+          message: 'You must be logged in to save sketches.'
+        });
+      }
+
+      const base64Data = imageUrl.replace(/^data:image\/png;base64,/, '');
+      const finalBuffer = Buffer.from(base64Data, 'base64');
+      const userId = req.user.id;
+      const timestamp = Date.now();
+      const randomSuffix = crypto.randomBytes(3).toString('hex');
+      const filepath = `${userId}/${timestamp}_${randomSuffix}.png`;
+
+      // Upload directly to storage (no AI call)
+      const storageUrl = await SketchService.uploadSketchToStorage(finalBuffer, filepath);
+
+      // Save sketch metadata to database
+      const savedSketch = await SketchService.saveSketchToDatabase({
+        userId,
+        prompt,
+        mangaStyle,
+        drawingStyle,
+        imageUrl: storageUrl,
+        seed: Number(seed) || 0,
+        parentId: parentId || null
+      });
+
+      const responsePayload: GenerateSketchResponse = {
+        id: savedSketch.id,
+        prompt: savedSketch.prompt,
+        mangaStyle: savedSketch.manga_style as MangaStyle,
+        drawingStyle: savedSketch.drawing_style as DrawingStyle,
+        imageUrl: savedSketch.image_url,
+        saved: true,
+        seed: savedSketch.seed,
+        parentId: savedSketch.parent_id || undefined,
+        createdAt: savedSketch.created_at,
+        watermarkText: watermarkText || undefined,
+        watermarkPosition: watermarkPosition || 'BOTTOM_RIGHT'
+      };
+
+      return res.status(201).json(responsePayload);
     }
 
     // 2. check safety blocklist (layer 1 safety)

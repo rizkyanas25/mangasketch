@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     setLoggingOut(true);
     try {
+      localStorage.removeItem('mangasketch_pending_upload');
       // 1 second delay to let the user see the cool cleaning workspace transition modal
       await new Promise((resolve) => setTimeout(resolve, 1000));
       const { error } = await supabase.auth.signOut();
