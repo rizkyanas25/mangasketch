@@ -8,6 +8,21 @@ import {
   DRAWING_STYLES,
   WATERMARK_POSITIONS,
 } from '@mangasketch/shared';
+import { HankoStamp } from './HankoStamp';
+
+const MANGA_STYLE_IMAGES: Record<MangaStyle, string> = {
+  SHONEN: '/assets/styles/pill-shonen.png',
+  SEINEN: '/assets/styles/pill-seinen.png',
+  SHOJO: '/assets/styles/pill-shojo.png',
+  CHIBI: '/assets/styles/pill-chibi.png',
+};
+
+const DRAWING_STYLE_IMAGES: Record<DrawingStyle, string> = {
+  ROUGH_SKETCH: '/assets/styles/pill-rough.png',
+  CLEAN_LINE_ART: '/assets/styles/pill-clean.png',
+  INKED_MANGA: '/assets/styles/pill-inked.png',
+  DETAILED_ILLUSTRATION: '/assets/styles/pill-detailed.png',
+};
 
 interface StyleSelectorProps {
   mangaStyle: MangaStyle;
@@ -21,151 +36,6 @@ interface StyleSelectorProps {
   disabled?: boolean;
 }
 
-interface HankoStampProps {
-  text?: string;
-  className?: string;
-  color?: string;
-}
-
-export function HankoStamp({
-  text,
-  className,
-  color = '#D9383A',
-}: HankoStampProps) {
-  const cleanName = text ? text.trim().toUpperCase().substring(0, 4) : '';
-  const hasText = cleanName.length > 0;
-  const userFontSize = cleanName.length <= 2 ? '12px' : '10px';
-
-  return (
-    <svg
-      viewBox='0 0 100 100'
-      className={className}
-      xmlns='http://www.w3.org/2000/svg'
-    >
-      {/* 1. White Solid background circle */}
-      <circle cx='50' cy='50' r='42' fill='#FFFFFF' />
-
-      {/* 2. Outer Circle Border */}
-      <circle
-        cx='50'
-        cy='50'
-        r='42'
-        fill='none'
-        stroke={color}
-        strokeWidth='4.5'
-      />
-
-      {hasText ? (
-        <>
-          {/* Right Column: マ ン ガ (vertically centered above banner) */}
-          <text
-            x='60'
-            y='34'
-            fill={color}
-            fontFamily="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif"
-            fontWeight='900'
-            fontSize='16px'
-            textAnchor='middle'
-            letterSpacing='-0.5px'
-          >
-            マ
-            <tspan x='60' dy='14'>
-              ン
-            </tspan>
-            <tspan x='60' dy='14'>
-              ガ
-            </tspan>
-          </text>
-
-          {/* Left Column: ス ケ ッ チ (vertically centered above banner) */}
-          <text
-            x='40'
-            y='31'
-            fill={color}
-            fontFamily="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif"
-            fontWeight='900'
-            fontSize='13px'
-            textAnchor='middle'
-            letterSpacing='-0.5px'
-          >
-            ス
-            <tspan x='40' dy='12'>
-              ケ
-            </tspan>
-            <tspan x='40' dy='10'>
-              ッ
-            </tspan>
-            <tspan x='40' dy='12'>
-              チ
-            </tspan>
-          </text>
-
-          {/* Bottom Red Segment Banner */}
-          <path d='M 14.2 72 A 42 42 0 0 0 85.8 72 Z' fill={color} />
-
-          {/* User initials/short name */}
-          <text
-            x='50'
-            y='86'
-            fill='#FFFFFF'
-            fontFamily="'Impact', 'Arial Black', sans-serif"
-            fontSize={userFontSize}
-            fontWeight='bold'
-            letterSpacing='0.5'
-            textAnchor='middle'
-          >
-            {cleanName}
-          </text>
-        </>
-      ) : (
-        <>
-          {/* Right Column: マ ン ガ (vertically centered in circle) */}
-          <text
-            x='60'
-            y='40'
-            fill={color}
-            fontFamily="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif"
-            fontWeight='900'
-            fontSize='17px'
-            textAnchor='middle'
-            letterSpacing='-0.5px'
-          >
-            マ
-            <tspan x='60' dy='16'>
-              ン
-            </tspan>
-            <tspan x='60' dy='16'>
-              ガ
-            </tspan>
-          </text>
-
-          {/* Left Column: ス ケ ッ チ (vertically centered in circle) */}
-          <text
-            x='40'
-            y='36'
-            fill={color}
-            fontFamily="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif"
-            fontWeight='900'
-            fontSize='15px'
-            textAnchor='middle'
-            letterSpacing='-0.5px'
-          >
-            ス
-            <tspan x='40' dy='14'>
-              ケ
-            </tspan>
-            <tspan x='40' dy='11'>
-              ッ
-            </tspan>
-            <tspan x='40' dy='14'>
-              チ
-            </tspan>
-          </text>
-        </>
-      )}
-    </svg>
-  );
-}
 
 export default function StyleSelector({
   mangaStyle,
@@ -188,64 +58,91 @@ export default function StyleSelector({
   };
 
   return (
-    <div className='flex flex-col gap-6'>
-      {/* 1. Manga Style Dimension */}
-      <div className='flex flex-col gap-2'>
-        <label className='font-mono text-xs font-bold uppercase tracking-wider'>
-          MANGA STYLE
-        </label>
-        <div className='flex flex-wrap gap-2'>
-          {MANGA_STYLES.map((style) => (
-            <button
-              type='button'
-              key={style}
-              disabled={disabled}
-              onClick={() => setMangaStyle(style)}
-              className={`font-mono text-xs font-bold px-3 py-1.5 border-2 border-foreground uppercase rounded-none transition-all ${
-                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              } ${
-                mangaStyle === style
-                  ? 'bg-foreground text-background'
-                  : 'bg-background text-foreground ' +
-                    (disabled ? '' : 'hover:bg-screentone')
-              }`}
-            >
-              {style}
-            </button>
-          ))}
+    <div className='flex flex-col gap-4 flex-1'>
+      {/* Left: Manga Style + Drawing Style (stacked) */}
+      <div className='flex flex-col gap-4 flex-1'>
+        {/* 1. Manga Style Dimension */}
+        <div className='flex flex-col gap-2'>
+          <label className='font-mono text-xs font-bold uppercase tracking-wider'>
+            MANGA STYLE
+          </label>
+          <div className='grid grid-cols-2 gap-2 flex-1'>
+            {MANGA_STYLES.map((style) => {
+              const isSelected = mangaStyle === style;
+              return (
+                <button
+                  type='button'
+                  key={style}
+                  disabled={disabled}
+                  onClick={() => setMangaStyle(style)}
+                  className={`relative overflow-hidden font-mono text-xs font-bold px-3 py-5 border-2 border-foreground uppercase text-left rounded-none transition-all ${
+                    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  } ${
+                    isSelected
+                      ? 'bg-foreground text-background'
+                      : 'bg-background text-foreground ' +
+                        (disabled ? '' : 'hover:bg-screentone')
+                  }`}
+                >
+                  <span className='relative z-10'>{style}</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={MANGA_STYLE_IMAGES[style]}
+                    alt=''
+                    aria-hidden='true'
+                    className={`absolute right-[-4px] bottom-[-4px] w-[70px] h-[70px] object-contain pointer-events-none z-0 pill-watermark ${
+                      isSelected ? 'pill-watermark-selected' : ''
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. Drawing Style Dimension (2 rows, 2 options each row) */}
+        <div className='flex flex-col gap-2'>
+          <label className='font-mono text-xs font-bold uppercase tracking-wider'>
+            DRAWING STYLE
+          </label>
+          <div className='grid grid-cols-2 gap-2 flex-1'>
+            {DRAWING_STYLES.map((style) => {
+              const isSelected = drawingStyle === style;
+              return (
+                <button
+                  type='button'
+                  key={style}
+                  disabled={disabled}
+                  onClick={() => setDrawingStyle(style)}
+                  className={`relative overflow-hidden font-mono text-xs font-bold px-3 py-5 border-2 border-foreground uppercase text-left rounded-none transition-all ${
+                    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  } ${
+                    isSelected
+                      ? 'bg-foreground text-background'
+                      : 'bg-background text-foreground ' +
+                        (disabled ? '' : 'hover:bg-screentone')
+                  }`}
+                >
+                  <span className='relative z-10'>{style.replace(/_/g, ' ')}</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={DRAWING_STYLE_IMAGES[style]}
+                    alt=''
+                    aria-hidden='true'
+                    className={`absolute right-[-4px] bottom-[-4px] w-[70px] h-[70px] object-contain pointer-events-none z-0 pill-watermark ${
+                      isSelected ? 'pill-watermark-selected' : ''
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 2. Drawing Style Dimension (2 rows, 2 options each row) */}
-      <div className='flex flex-col gap-2'>
-        <label className='font-mono text-xs font-bold uppercase tracking-wider'>
-          DRAWING STYLE
-        </label>
-        <div className='grid grid-cols-2 gap-2'>
-          {DRAWING_STYLES.map((style) => (
-            <button
-              type='button'
-              key={style}
-              disabled={disabled}
-              onClick={() => setDrawingStyle(style)}
-              className={`font-mono text-xs font-bold px-3 py-2 border-2 border-foreground uppercase text-center rounded-none transition-all ${
-                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              } ${
-                drawingStyle === style
-                  ? 'bg-foreground text-background'
-                  : 'bg-background text-foreground ' +
-                    (disabled ? '' : 'hover:bg-screentone')
-              }`}
-            >
-              {style.replace(/_/g, ' ')}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* 3. Hanko Watermark Options */}
-      <div className='border-2 border-foreground p-4 bg-background'>
-        <div className='flex justify-between h-auto'>
+      {/* Right: Hanko Watermark Section */}
+      <div className='border-2 border-foreground p-4 bg-background flex-1'>
+        <div className='flex justify-between h-full'>
           {/* Left Column: Stamp Initials (Top) + Live Preview (Bottom) */}
           <div className='flex flex-col gap-3'>
             {/* Stamp Initials */}
@@ -271,12 +168,12 @@ export default function StyleSelector({
                 PREVIEW
               </label>
               <div className='border-2 border-foreground border-dashed p-2 bg-neutral-light/5 flex items-center justify-center'>
-                <HankoStamp text={watermarkText} className='w-20 h-20' />
+                <HankoStamp text={watermarkText} className='w-24 h-24' />
               </div>
             </div>
           </div>
 
-          {/* Right Column: Stamp Placement 2x2 Grid with 3:4 Aspect Ratio */}
+          {/* Right Column: Stamp Placement 2x2 Grid — height matches left column, keeps 3:4 ratio */}
           <div className='flex flex-col gap-1.5 items-end self-stretch'>
             <label className='font-mono text-[10px] font-bold uppercase tracking-wider text-left'>
               POSITION
@@ -340,7 +237,7 @@ export default function StyleSelector({
                     >
                       <HankoStamp
                         text={watermarkText}
-                        className={`w-4 h-4 absolute transition-all ${stampPosition} ${
+                        className={`w-5 h-5 absolute transition-all ${stampPosition} ${
                           isActive
                             ? 'scale-100 opacity-100'
                             : 'scale-75 opacity-0 ' +

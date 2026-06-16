@@ -16,6 +16,8 @@
   --screentone-dot: rgba(0, 0, 0, 0.12);
   --screentone-dot-dense: rgba(0, 0, 0, 0.25);
   --shadow-color: #000000;
+  --pill-img-filter: brightness(0);
+  --pill-img-filter-selected: brightness(0) invert(1);
 }
 
 /* Tankobon (Recycled Warm Paper) Theme */
@@ -25,6 +27,8 @@
   --screentone-dot: rgba(34, 31, 29, 0.09);
   --screentone-dot-dense: rgba(34, 31, 29, 0.22);
   --shadow-color: #221f1d;
+  --pill-img-filter: brightness(0) sepia(1) saturate(0.8) brightness(0.35);
+  --pill-img-filter-selected: brightness(0) invert(1);
 }
 
 /* Midnight (Charcoal Sketchbook) Theme */
@@ -34,6 +38,8 @@
   --screentone-dot: rgba(230, 227, 221, 0.08);
   --screentone-dot-dense: rgba(230, 227, 221, 0.2);
   --shadow-color: #e6e3dd;
+  --pill-img-filter: brightness(0) invert(1);
+  --pill-img-filter-selected: brightness(0);
 }
 
 body {
@@ -140,4 +146,62 @@ body {
   border: 2px solid var(--background);
 }
 
+/* Manga Speed Lines / Action Lines (radial burst) */
+.manga-speedlines {
+  position: relative;
+}
 
+.manga-speedlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 7deg,
+    var(--foreground) 7deg 8deg
+  );
+  opacity: 0.045;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, transparent 15%, black 40%);
+  -webkit-mask-image: radial-gradient(ellipse at center, transparent 15%, black 40%);
+}
+
+/* Dense speed lines for error drama */
+.manga-speedlines-dense::before {
+  opacity: 0.08;
+  background: repeating-conic-gradient(
+    from 0deg,
+    transparent 0deg 5deg,
+    var(--foreground) 5deg 6.5deg
+  );
+}
+
+/* Slow pulse for dramatic text */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Style Selector Pill Watermarks & Hover Micro-Animations */
+.pill-watermark {
+  opacity: 0.35;
+  transform: scale(1);
+  filter: var(--pill-img-filter);
+  transition: all 0.15s ease-in-out;
+}
+
+/* Hovering over the parent button scales the watermark of unselected pills */
+button:hover .pill-watermark:not(.pill-watermark-selected) {
+  opacity: 0.40;
+  transform: scale(1.05);
+}
+
+.pill-watermark-selected {
+  opacity: 0.45;
+  transform: scale(1.05);
+  filter: var(--pill-img-filter-selected);
+}

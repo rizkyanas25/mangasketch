@@ -7,6 +7,8 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { FileSharp, BookOpenSharp, Moon } from 'pixelarticons/react';
 import { useUiStore } from '@/store/uiStore';
+import { GoogleIcon } from '@/components/GoogleIcon';
+import { HankoStamp } from './HankoStamp';
 
 export default function Header() {
   const { user, loading, login, logout } = useAuth();
@@ -34,9 +36,10 @@ export default function Header() {
         <div className='flex items-center'>
           <Link
             href='/'
-            className='font-display text-2xl md:text-3xl tracking-wider hover:opacity-85 transition-opacity'
+            className='relative font-display text-2xl md:text-3xl tracking-wider hover:opacity-85 transition-opacity'
           >
-            MANGASKETCH
+            <HankoStamp className='absolute -top-2.5 -right-7 w-10 h-10 z-0 opacity-90' />
+            <span className='relative z-10'>MANGASKETCH</span>
           </Link>
         </div>
 
@@ -63,13 +66,19 @@ export default function Header() {
                 key={id}
                 onClick={() => setTheme(id)}
                 title={`Switch to ${name} mode`}
-                className={`p-1.5 cursor-pointer transition-colors duration-150 ${
+                className={`p-1.5 cursor-pointer transition-colors duration-150 group ${
                   theme === id
                     ? 'bg-foreground text-background'
-                    : 'bg-background text-foreground hover:bg-foreground hover:text-background'
+                    : 'bg-background text-foreground'
                 }`}
               >
-                <Icon className='w-5 h-5' />
+                <Icon
+                  className={`w-5 h-5 transition-transform duration-150 ${
+                    theme === id
+                      ? 'scale-110'
+                      : 'scale-100 group-hover:scale-110'
+                  }`}
+                />
               </button>
             ))}
           </div>
@@ -125,8 +134,9 @@ export default function Header() {
             <button
               onClick={() => login()}
               disabled={isGenerating}
-              className='font-display px-5 py-1.5 text-sm md:text-base border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none'
+              className='font-display px-5 py-1.5 text-sm md:text-base border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none flex items-center gap-2'
             >
+              <GoogleIcon className='w-5 h-5' />
               LOGIN
             </button>
           )}
