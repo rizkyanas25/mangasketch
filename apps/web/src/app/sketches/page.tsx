@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
 import { deleteSketchAction } from '../actions';
-import { WarningDiamond, MagicEdit } from 'pixelarticons/react';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import { MagicEdit } from 'pixelarticons/react';
 import CanvasPanelError from '@/components/CanvasPanelError';
 import SketchCard from '@/components/SketchCard';
 import SketchSkeletonCard from '@/components/SketchSkeletonCard';
@@ -75,7 +76,7 @@ export default function SketchesPage() {
   const [displayLimit, setDisplayLimit] = useState(12);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const [sketchToDelete, setSketchToDelete] = useState<string | null>(null);
+  const [sketchToDelete, setSketchToDelete] = useState<GroupedSketch | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -132,7 +133,7 @@ export default function SketchesPage() {
 
     try {
       const result = await deleteSketchAction(
-        sketchToDelete,
+        sketchToDelete.rootId,
         session.access_token,
       );
 
@@ -142,7 +143,7 @@ export default function SketchesPage() {
 
       // Successful deletion
       queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
-      showToast('deleted', 'SKETCH FAMILY SCRAPPED! Removed from sketchbook.', false);
+      showToast('deleted', 'SKETCH SCRAPPED! Removed from sketchbook.', false, 2500);
       setSketchToDelete(null);
     } catch (err: unknown) {
       const errorMsg =
@@ -267,65 +268,31 @@ export default function SketchesPage() {
       )}
 
       {/* 5. Delete Confirmation Modal */}
-      {sketchToDelete && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
-          {/* Backdrop */}
-          <div
-            className='fixed inset-0 bg-background/80 backdrop-blur-sm'
-            onClick={() => !isDeleting && setSketchToDelete(null)}
-          />
-
-          {/* Modal Box */}
-          <div className='bg-background border-4 border-foreground p-6 max-w-md w-full relative z-10 neo-shadow-lg text-center flex flex-col items-center'>
-            <div className='text-destructive mb-4'>
-              <WarningDiamond className='w-12 h-12' />
-            </div>
-
-            <h3 className='font-display text-2xl text-destructive uppercase tracking-wide mb-3'>
-              SCRAP THIS DRAFT?
-            </h3>
-
-            <p className='font-sans text-sm text-neutral mb-6 uppercase font-medium leading-relaxed'>
-              Are you sure you want to permanently erase this sketch? This
-              action cannot be undone.
-            </p>
-
-            {/* Inline Error Alert */}
-            {deleteError && (
-              <div className='w-full border-2 border-destructive bg-destructive/10 p-3 mb-6 text-left'>
-                <span className='font-mono text-xs font-bold text-destructive'>
-                  [!] FAILURE: {deleteError}
-                </span>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className='flex flex-col sm:flex-row gap-3 w-full'>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-                className='flex-1 font-display py-3 border-2 border-destructive bg-destructive text-white hover:bg-background hover:text-destructive active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase cursor-pointer'
-              >
-                {isDeleting ? 'ERASING...' : 'SCRAP DRAFT'}
-              </button>
-              <button
-                onClick={() => setSketchToDelete(null)}
-                disabled={isDeleting}
-                className='flex-1 font-display py-3 border-2 border-foreground bg-background text-foreground hover:bg-foreground hover:text-background active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase cursor-pointer'
-              >
-                KEEP SKETCH
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationModal
+        isOpen={!!sketchToDelete}
+        onClose={() => setSketchToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        error={deleteError}
+        title="SCRAP THIS ENTIRE SKETCH FAMILY?"
+        description="Are you sure you want to permanently erase this sketch family? This will erase the entire family of sketch versions."
+        confirmText="SCRAP SKETCH"
+        badgeText="[ ORIGINAL SKETCH ]"
+        imageUrl={sketchToDelete?.latest.image_url || ''}
+        mangaStyle={sketchToDelete?.latest.manga_style || ''}
+        drawingStyle={sketchToDelete?.latest.drawing_style || ''}
+        prompt={sketchToDelete?.latest.prompt || ''}
+      />
     </div>
   );
 
   // Trigger modal settings
   function handleDeleteClick(latest: Sketch) {
     const rootId = latest.parent_id || latest.id;
-    setSketchToDelete(rootId);
+    const group = groupedSketches.find((g) => g.rootId === rootId);
+    if (group) {
+      setSketchToDelete(group);
+    }
     setDeleteError(null);
   }
 }

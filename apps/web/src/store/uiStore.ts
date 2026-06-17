@@ -12,7 +12,7 @@ interface UiState {
   isGenerating: boolean;
   setIsGenerating: (loading: boolean) => void;
   toast: ToastState | null;
-  showToast: (type: ToastType, message: string, triggerJiggle?: boolean) => void;
+  showToast: (type: ToastType, message: string, triggerJiggle?: boolean, duration?: number) => void;
   hideToast: () => void;
   isJiggling: boolean;
   setIsJiggling: (jiggle: boolean) => void;
@@ -26,7 +26,7 @@ export const useUiStore = create<UiState>((set) => ({
   setIsGenerating: (loading) => set({ isGenerating: loading }),
   toast: null,
   isJiggling: false,
-  showToast: (type, message, triggerJiggle = false) => {
+  showToast: (type, message, triggerJiggle = false, duration = 4000) => {
     if (toastTimer) clearTimeout(toastTimer);
     if (jiggleTimer) clearTimeout(jiggleTimer);
 
@@ -35,7 +35,7 @@ export const useUiStore = create<UiState>((set) => ({
       isJiggling: triggerJiggle,
     });
 
-    // Hide toast after 4 seconds
+    // Hide toast after custom duration
     toastTimer = setTimeout(() => {
       set((state) => {
         if (state.toast) {
@@ -48,13 +48,13 @@ export const useUiStore = create<UiState>((set) => ({
       toastTimer = setTimeout(() => {
         set({ toast: null });
       }, 300);
-    }, 4000);
+    }, duration);
 
-    // Stop jiggling after 4 seconds to match toast visibility duration
+    // Stop jiggling after custom duration to match toast visibility duration
     if (triggerJiggle) {
       jiggleTimer = setTimeout(() => {
         set({ isJiggling: false });
-      }, 4000);
+      }, duration);
     }
   },
   hideToast: () => {

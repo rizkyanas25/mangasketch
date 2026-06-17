@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
-import { GetSketchDetailResponse, MangaStyle, DrawingStyle, WatermarkPosition } from '@mangasketch/shared';
+import { GetSketchDetailResponse, MangaStyle, DrawingStyle, WatermarkPosition, Sketch } from '@mangasketch/shared';
 import CanvasPanelError from '@/components/CanvasPanelError';
 import SketchSkeletonCard from '@/components/SketchSkeletonCard';
 import MangaCanvas from '@/components/MangaCanvas';
 import GenerateForm from '@/components/GenerateForm';
-import { ArrowLeft, MagicEdit } from 'pixelarticons/react';
-import { generateSketchAction } from '../../actions';
+import { ArrowLeft, MagicEdit, Trash } from 'pixelarticons/react';
+import { generateSketchAction, deleteSketchAction } from '../../actions';
 import { useUiStore } from '@/store/uiStore';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -34,6 +35,15 @@ export default function SketchDetailPage() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+
+  const [sketchToDelete, setSketchToDelete] = useState<{
+    sketch: Sketch;
+    label: string;
+    index: number;
+    isOriginal: boolean;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch sketch details and history versions
   const { data, isLoading, error: queryError } = useQuery<GetSketchDetailResponse>({
@@ -147,6 +157,58 @@ export default function SketchDetailPage() {
       setGenerationError(errMsg);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!sketchToDelete || !session?.access_token) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const result = await deleteSketchAction(
+        sketchToDelete.sketch.id,
+        session.access_token
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      if (sketchToDelete.isOriginal) {
+        // Deleted entire family
+        showToast('deleted', 'SKETCH SCRAPPED! Removed from sketchbook.', false, 2500);
+        setSketchToDelete(null);
+        router.replace('/sketches');
+      } else {
+        // Deleted a specific version
+        showToast('deleted', 'VERSION SCRAPPED! Removed from sketchbook.', false, 2500);
+        
+        // 1. Calculate the latest remaining version
+        const remaining = sortedVersions.filter((v) => v.id !== sketchToDelete.sketch.id);
+        const latestRemaining = remaining[remaining.length - 1];
+
+        // 2. Clear modal state instantly
+        setSketchToDelete(null);
+
+        // 3. Select the latest remaining version and redirect to it instantly
+        if (latestRemaining) {
+          handleVersionSelect(latestRemaining.id);
+        } else {
+          router.replace('/sketches');
+        }
+
+        // 4. Invalidate queries in the background (no await)
+        queryClient.invalidateQueries({
+          queryKey: ['sketch-detail', familyId, user?.id],
+        });
+      }
+    } catch (err) {
+      console.error('Delete sketch error:', err);
+      const errorMsg = err instanceof Error ? err.message : 'An error occurred during deletion.';
+      setDeleteError(errorMsg);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -292,6 +354,25 @@ export default function SketchDetailPage() {
                           ★ SELECTED
                         </div>
                       )}
+                      {/* Trash Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setSketchToDelete({
+                            sketch: ver,
+                            label: verLabel,
+                            index: idx,
+                            isOriginal: isOriginal,
+                          });
+                          setDeleteError(null);
+                        }}
+                        className="absolute top-1 right-1 bg-background text-foreground border border-foreground p-1 hover:text-destructive hover:scale-110 cursor-pointer z-20 flex items-center justify-center transition-all opacity-0 group-hover/version-card:opacity-100 focus:opacity-100"
+                        title={isOriginal ? "Delete entire sketch family" : "Delete this version"}
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                     
                     {/* Version Details */}
@@ -325,6 +406,30 @@ export default function SketchDetailPage() {
           )}
         </div>
       </section>
+
+      {/* 5. Delete Confirmation Modal */}
+      {sketchToDelete && (
+        <DeleteConfirmationModal
+          isOpen={!!sketchToDelete}
+          onClose={() => setSketchToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          isDeleting={isDeleting}
+          error={deleteError}
+          title={sketchToDelete.isOriginal ? "SCRAP THIS ENTIRE SKETCH FAMILY?" : "SCRAP THIS VERSION?"}
+          description={
+            sketchToDelete.isOriginal
+              ? "Are you sure you want to permanently erase this sketch family? This will erase the entire family of sketch versions."
+              : "Are you sure you want to permanently erase this version? This will erase only this version."
+          }
+          confirmText={sketchToDelete.isOriginal ? "SCRAP SKETCH" : "SCRAP VERSION"}
+          cancelText={sketchToDelete.isOriginal ? "KEEP SKETCH" : "KEEP VERSION"}
+          badgeText={sketchToDelete.isOriginal ? "[ ORIGINAL SKETCH ]" : `[ ${sketchToDelete.label} ]`}
+          imageUrl={sketchToDelete.sketch.image_url || ''}
+          mangaStyle={sketchToDelete.sketch.manga_style || ''}
+          drawingStyle={sketchToDelete.sketch.drawing_style || ''}
+          prompt={sketchToDelete.sketch.prompt || ''}
+        />
+      )}
     </div>
   );
 }
