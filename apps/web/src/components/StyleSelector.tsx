@@ -34,6 +34,8 @@ interface StyleSelectorProps {
   watermarkPosition: WatermarkPosition;
   setWatermarkPosition: (pos: WatermarkPosition) => void;
   disabled?: boolean;
+  isMangaStyleChanged?: boolean;
+  isDrawingStyleChanged?: boolean;
 }
 
 
@@ -47,6 +49,8 @@ export default function StyleSelector({
   watermarkPosition,
   setWatermarkPosition,
   disabled = false,
+  isMangaStyleChanged = false,
+  isDrawingStyleChanged = false,
 }: StyleSelectorProps) {
   const handleWatermarkTextChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -63,8 +67,11 @@ export default function StyleSelector({
       <div className='flex flex-col gap-4 flex-1'>
         {/* 1. Manga Style Dimension */}
         <div className='flex flex-col gap-2'>
-          <label className='font-mono text-xs font-bold uppercase tracking-wider'>
-            MANGA STYLE
+          <label className='font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2'>
+            <span>MANGA STYLE</span>
+            {isMangaStyleChanged && (
+              <span className="text-destructive font-mono text-[9px] font-bold tracking-widest">[ CHANGED ]</span>
+            )}
           </label>
           <div className='grid grid-cols-2 gap-2 flex-1'>
             {MANGA_STYLES.map((style) => {
@@ -102,8 +109,11 @@ export default function StyleSelector({
 
         {/* 2. Drawing Style Dimension (2 rows, 2 options each row) */}
         <div className='flex flex-col gap-2'>
-          <label className='font-mono text-xs font-bold uppercase tracking-wider'>
-            DRAWING STYLE
+          <label className='font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2'>
+            <span>DRAWING STYLE</span>
+            {isDrawingStyleChanged && (
+              <span className="text-destructive font-mono text-[9px] font-bold tracking-widest">[ CHANGED ]</span>
+            )}
           </label>
           <div className='grid grid-cols-2 gap-2 flex-1'>
             {DRAWING_STYLES.map((style) => {

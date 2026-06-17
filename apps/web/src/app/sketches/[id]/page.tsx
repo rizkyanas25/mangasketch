@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
 import { GetSketchDetailResponse, MangaStyle, DrawingStyle, WatermarkPosition } from '@mangasketch/shared';
 import CanvasPanelError from '@/components/CanvasPanelError';
@@ -11,6 +11,8 @@ import SketchSkeletonCard from '@/components/SketchSkeletonCard';
 import MangaCanvas from '@/components/MangaCanvas';
 import GenerateForm from '@/components/GenerateForm';
 import { ArrowLeft, MagicEdit } from 'pixelarticons/react';
+import { generateSketchAction } from '../../actions';
+import { useUiStore } from '@/store/uiStore';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -18,6 +20,8 @@ export default function SketchDetailPage() {
   const { id } = useParams() as { id: string };
   const { user, loading, session } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const showToast = useUiStore((state) => state.showToast);
 
   // Local state to track which version is currently active/selected
   const [activeVersionId, setActiveVersionId] = useState<string>(id);
@@ -73,13 +77,23 @@ export default function SketchDetailPage() {
 
   const activeSketch = data?.versions.find((v) => v.id === activeVersionId) || data?.sketch;
 
+  const sortedVersions = data?.versions
+    ? [...data.versions].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    : [];
+  const activeIndex = sortedVersions.findIndex((v) => v.id === activeSketch?.id);
+  const activeLabel = activeSketch
+    ? activeSketch.parent_id === null || activeIndex === 0
+      ? 'V1 (ORIGINAL)'
+      : `V${activeIndex + 1}`
+    : '';
+
   const handleVersionSelect = (verId: string) => {
     setActiveVersionId(verId);
     setGenerationError(null); // Clear previous generation error when switching versions
     router.replace(`/sketches/${verId}`, { scroll: false });
   };
 
-  const handleReInkSubmit = async (formData: {
+  const handleReSketchSubmit = async (formData: {
     prompt: string;
     mangaStyle: MangaStyle;
     drawingStyle: DrawingStyle;
@@ -87,7 +101,53 @@ export default function SketchDetailPage() {
     watermarkPosition: WatermarkPosition;
     lockSeed: boolean;
   }) => {
-    console.log('Re-ink form submitted:', formData);
+    setIsGenerating(true);
+    setGenerationError(null);
+
+    try {
+      const fd = new FormData();
+      fd.append('prompt', formData.prompt);
+      fd.append('mangaStyle', formData.mangaStyle);
+      fd.append('drawingStyle', formData.drawingStyle);
+      fd.append('watermarkText', formData.watermarkText || '');
+      fd.append('watermarkPosition', formData.watermarkPosition || 'BOTTOM_RIGHT');
+      fd.append('parentId', familyId);
+
+      if (formData.lockSeed && activeSketch?.seed) {
+        fd.append('seed', String(activeSketch.seed));
+      }
+
+      if (session?.access_token) {
+        fd.append('token', session.access_token);
+      }
+
+      const response = await generateSketchAction({ data: null, error: null }, fd);
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (!response.data) {
+        throw new Error('Failed to generate new sketch version.');
+      }
+
+      // 1. Invalidate queries to fetch updated version timeline
+      await queryClient.invalidateQueries({
+        queryKey: ['sketch-detail', familyId, user?.id],
+      });
+
+      // 2. Show global success toast (no header jiggle)
+      showToast('success', 'New version successfully inked!', false);
+
+      // 3. Redirect to the newly generated version
+      router.replace(`/sketches/${response.data.id}`, { scroll: false });
+    } catch (err) {
+      console.error('Re-sketch error:', err);
+      const errMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setGenerationError(errMsg);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Handle loading state
@@ -147,14 +207,14 @@ export default function SketchDetailPage() {
           />
           
           {/* Active Sketch Details */}
-          {activeSketch && !isPageLoading && (
+          {activeSketch && !isPageLoading && !isGenerating && (
             <div className="mt-4 border-2 border-foreground p-4 bg-background flex flex-col gap-2">
               <div className="flex flex-wrap items-center justify-between text-xs font-mono font-bold text-neutral">
                 <span>
-                  {activeSketch.parent_id ? 'VERSION' : 'ORIGINAL'} • {activeSketch.manga_style} • {activeSketch.drawing_style.replace(/_/g, ' ')}
+                  {activeLabel} • {activeSketch.manga_style} • {activeSketch.drawing_style.replace(/_/g, ' ')}
                 </span>
                 <span>
-                  CREATED: {new Date(activeSketch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                  CREATED: {new Date(activeSketch.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
                 </span>
               </div>
               <div className="font-mono text-[10px] font-bold text-neutral">
@@ -163,20 +223,22 @@ export default function SketchDetailPage() {
               <div className="border-t-2 border-foreground/10 my-2" />
               <div className="font-sans text-sm text-foreground font-medium uppercase leading-relaxed">
                 <span className="font-mono text-xs font-bold text-neutral block mb-1">MANGAKA PROMPT:</span>
-                {activeSketch.prompt}
+                <div className="h-[72px] overflow-y-auto scrollbar-custom pr-1 font-sans text-xs text-foreground/90 uppercase">
+                  {activeSketch.prompt}
+                </div>
               </div>
             </div>
           )}
         </section>
 
-        {/* Right Column: Re-ink Form */}
+        {/* Right Column: Re-sketch Form */}
         <GenerateForm
           key={isPageLoading ? 'loading' : activeSketch?.id}
           sketch={activeSketch}
           mode="edit"
           isPageLoading={isPageLoading}
           isGenerating={isGenerating}
-          onSubmit={handleReInkSubmit}
+          onSubmit={handleReSketchSubmit}
         />
       </div>
 
@@ -186,7 +248,7 @@ export default function SketchDetailPage() {
           <MagicEdit className="w-6 h-6" />
           SKETCHING PROCESS <span className="font-sans text-xs text-neutral font-medium">(VERSION HISTORY)</span>
         </h3>
-        <div className="flex gap-4 overflow-x-auto pt-2 pb-4 scrollbar-custom">
+        <div className="flex gap-4 overflow-x-auto pt-2 px-2 -mx-2 pb-4 scrollbar-custom">
           {isPageLoading ? (
             [...Array(4)].map((_, i) => (
               <SketchSkeletonCard key={i} variant="timeline" />
@@ -206,8 +268,8 @@ export default function SketchDetailPage() {
                     onClick={() => handleVersionSelect(ver.id)}
                     className={`w-28 md:w-32 flex-shrink-0 bg-background rounded-none flex flex-col text-left transition-all cursor-pointer group/version-card ${
                       isActive
-                        ? 'border-4 border-foreground -translate-y-1 neo-shadow-sm'
-                        : 'border-2 border-foreground hover:-translate-y-0.5 hover:neo-shadow-xs active:translate-y-0'
+                        ? 'border-4 border-foreground -translate-x-0.5 -translate-y-0.5 neo-shadow-sm'
+                        : 'border-2 border-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 hover:neo-shadow-xs active:translate-x-0 active:translate-y-0'
                     }`}
                   >
                     {/* Image Container */}
@@ -216,7 +278,7 @@ export default function SketchDetailPage() {
                       <img
                         src={ver.image_url}
                         alt={verLabel}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover/version-card:scale-102"
+                        className="w-full h-full object-cover"
                       />
                       {isActive && (
                         <div className="absolute top-1 left-1 bg-foreground text-background px-1 py-0.5 font-mono text-[8px] font-bold border border-background flex items-center gap-0.5 select-none z-10">
@@ -226,17 +288,24 @@ export default function SketchDetailPage() {
                     </div>
                     
                     {/* Version Details */}
-                    <div className="p-1.5 flex flex-col gap-1 bg-background justify-between flex-1 font-mono text-[9px] w-full">
-                      <div className="flex items-center justify-between text-neutral font-bold w-full">
-                        <span>{verLabel}</span>
-                        <span className="text-[8px]">{ver.manga_style}</span>
+                    <div className="p-2 flex flex-col gap-0.5 bg-background justify-between flex-1 font-mono text-[8px] w-full border-t border-foreground/10">
+                      <div className="font-bold text-foreground uppercase text-[9px]">
+                        {verLabel}
                       </div>
-                      
-                      {/* Prompt without tooltip */}
-                      <div className="mt-0.5 w-full">
-                        <p className="line-clamp-2 text-foreground font-sans text-[9px] font-medium leading-tight uppercase">
-                          {ver.prompt}
-                        </p>
+                      <div className="text-neutral font-semibold uppercase mt-0.5">
+                        {ver.manga_style}
+                      </div>
+                      <div className="text-neutral font-semibold uppercase leading-tight truncate">
+                        {ver.drawing_style.replace(/_/g, ' ')}
+                      </div>
+                      <div className="text-neutral/80 text-[7px] uppercase mt-1 leading-none">
+                        {new Date(ver.created_at).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }).toUpperCase()}
                       </div>
                     </div>
                   </button>

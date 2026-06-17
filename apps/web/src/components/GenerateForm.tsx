@@ -43,6 +43,11 @@ export default function GenerateForm({
   const [watermarkPosition, setWatermarkPosition] = useState<WatermarkPosition>('BOTTOM_RIGHT');
   const [lockSeed, setLockSeed] = useState(false);
 
+  const isPromptChanged = mode === 'edit' && !!sketch && prompt !== sketch.prompt;
+  const isMangaStyleChanged = mode === 'edit' && !!sketch && mangaStyle !== sketch.manga_style;
+  const isDrawingStyleChanged = mode === 'edit' && !!sketch && drawingStyle !== sketch.drawing_style;
+  const hasChanges = mode === 'create' || isPromptChanged || isMangaStyleChanged || isDrawingStyleChanged;
+
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= 500) {
       setPrompt(e.target.value);
@@ -51,7 +56,7 @@ export default function GenerateForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isPageLoading || isGenerating || !prompt.trim() || !mangaStyle || !drawingStyle) return;
+    if (isPageLoading || isGenerating || !prompt.trim() || !mangaStyle || !drawingStyle || (mode === 'edit' && !hasChanges)) return;
 
     onSubmit({
       prompt,
@@ -64,13 +69,14 @@ export default function GenerateForm({
   };
 
   const isDisabled = isPageLoading || isGenerating;
+  const isSubmitDisabled = isDisabled || !prompt.trim() || !mangaStyle || !drawingStyle || (mode === 'edit' && !hasChanges);
 
   // Determine button text
   let buttonText = 'SKETCH THIS IDEA';
   if (isPageLoading || isGenerating) {
-    buttonText = 'LOADING SKETCH...';
+    buttonText = 'LOADING SKETCH';
   } else if (mode === 'edit') {
-    buttonText = 'SKETCH NEW VERSION';
+    buttonText = hasChanges ? 'SKETCH NEW VERSION' : 'NO CHANGES DETECTED';
   } else if (hasExistingImage) {
     buttonText = 'SKETCH A NEW IDEA';
   }
@@ -83,14 +89,19 @@ export default function GenerateForm({
       {/* Describe prompt textarea */}
       <div className="flex flex-col gap-2">
         <label className="font-mono text-xs font-bold uppercase tracking-wider flex justify-between">
-          <span>DESCRIBE YOUR SCENE</span>
+          <span className="flex items-center gap-2">
+            <span>DESCRIBE YOUR SCENE</span>
+            {isPromptChanged && (
+              <span className="text-destructive font-mono text-[9px] font-bold tracking-widest">[ CHANGED ]</span>
+            )}
+          </span>
           <span className="text-neutral">{prompt?.length || 0}/500</span>
         </label>
         <textarea
           disabled={isDisabled}
           value={isPageLoading ? '' : prompt}
           onChange={handlePromptChange}
-          placeholder={isPageLoading ? 'LOADING SKETCH...' : 'DESCRIBE YOUR SCENE...'}
+          placeholder={isPageLoading ? 'LOADING SKETCH' : 'E.G., YOUNG PIRATE CAPTAIN DESCENDING FROM THE SKY ABOVE A BATTLEFIELD, SOLDIERS LOOKING UP IN SHOCK, THE FINAL WAR ABOUT TO BEGIN...'}
           className="w-full min-h-[120px] p-3 border-2 border-foreground bg-background text-foreground font-mono text-sm placeholder:font-mono placeholder:text-sm placeholder:text-neutral focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-all resize-none rounded-none uppercase"
         />
       </div>
@@ -106,6 +117,8 @@ export default function GenerateForm({
         watermarkPosition={watermarkPosition}
         setWatermarkPosition={setWatermarkPosition}
         disabled={isDisabled}
+        isMangaStyleChanged={isMangaStyleChanged}
+        isDrawingStyleChanged={isDrawingStyleChanged}
       />
 
       {/* Lock Seed Toggle (Only shown in edit/detail page mode) */}
@@ -134,7 +147,7 @@ export default function GenerateForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isDisabled || !prompt.trim() || !mangaStyle || !drawingStyle}
+        disabled={isSubmitDisabled}
         className="w-full font-display border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none uppercase flex flex-col items-center justify-center gap-1 min-h-[76px] px-4 py-2 group"
       >
         <span className="flex items-center justify-center gap-2 text-lg md:text-xl">

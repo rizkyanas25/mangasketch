@@ -12,9 +12,9 @@ const SUBTITLES_GENERATE = [
 ];
 
 const SUBTITLES_FETCH = [
-  'Locating canvas details...',
-  'Loading history versions...',
-  'Preparing workspace...',
+  'Locating canvas details',
+  'Loading history versions',
+  'Preparing workspace',
 ];
 
 const QUOTES = [
@@ -57,7 +57,7 @@ export default function CanvasPanelLoading({
 
         {/* Dramatic Main Title */}
         <h2 className='font-display text-3xl md:text-4xl italic tracking-wide mb-4 leading-tight'>
-          {loadingType === 'fetch' ? 'Retrieving sketch...' : 'Sketching your idea...'}
+          {loadingType === 'fetch' ? 'Retrieving sketch' : 'Sketching your idea'}
         </h2>
 
         {/* Rotating Status Subtitle */}
