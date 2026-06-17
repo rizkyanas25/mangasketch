@@ -11,6 +11,7 @@ import ErrorPanel from '@/components/ErrorPanel';
 import SketchCard from '@/components/SketchCard';
 import SketchSkeletonCard from '@/components/SketchSkeletonCard';
 import { Sketch, GetSketchesResponse } from '@mangasketch/shared';
+import { useUiStore } from '@/store/uiStore';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -68,6 +69,7 @@ export default function SketchesPage() {
   const { user, loading, session } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const showToast = useUiStore((state) => state.showToast);
 
   // Local Page States
   const [displayLimit, setDisplayLimit] = useState(12);
@@ -76,9 +78,6 @@ export default function SketchesPage() {
   const [sketchToDelete, setSketchToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const [toast, setToast] = useState<'recovered' | 'deleted' | null>(null);
-  const [toastVisible, setToastVisible] = useState(false);
 
   // Redirect to Home if not logged in
   useEffect(() => {
@@ -91,34 +90,12 @@ export default function SketchesPage() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('toast') === 'recovered') {
-      setTimeout(() => {
-        setToast('recovered');
-      }, 0);
+      showToast('success', 'SKETCH SECURED! Saved to sketchbook.', true);
       // Clean up parameter without reload
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
-  }, []);
-
-  // Toast animation and auto-dismiss
-  useEffect(() => {
-    if (toast) {
-      const animTimer = setTimeout(() => {
-        setToastVisible(true);
-      }, 50);
-
-      const timer = setTimeout(() => {
-        setToastVisible(false);
-        const exitTimer = setTimeout(() => setToast(null), 300);
-        return () => clearTimeout(exitTimer);
-      }, 4000);
-
-      return () => {
-        clearTimeout(animTimer);
-        clearTimeout(timer);
-      };
-    }
-  }, [toast]);
+  }, [showToast]);
 
   // React Query Fetching
   const {
@@ -165,7 +142,7 @@ export default function SketchesPage() {
 
       // Successful deletion
       queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
-      setToast('deleted');
+      showToast('deleted', 'SKETCH FAMILY SCRAPPED! Removed from sketchbook.', false);
       setSketchToDelete(null);
     } catch (err: unknown) {
       const errorMsg =
@@ -340,31 +317,6 @@ export default function SketchesPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* 6. Success Toast Notifications */}
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 border-4 border-foreground bg-background p-4 neo-shadow-sm flex items-center gap-3 transition-all duration-300 ease-out transform ${toastVisible ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}`}
-        >
-          {toast === 'recovered' ? (
-            <>
-              <span className='font-mono text-lg font-bold'>[✓]</span>
-              <span className='font-mono text-xs font-bold uppercase tracking-wider'>
-                SKETCH SECURED! Saved to sketchbook.
-              </span>
-            </>
-          ) : (
-            <>
-              <span className='font-mono text-lg font-bold text-destructive'>
-                [✗]
-              </span>
-              <span className='font-mono text-xs font-bold uppercase tracking-wider'>
-                SKETCH SCRAPPED! Removed from sketchbook.
-              </span>
-            </>
-          )}
         </div>
       )}
     </div>

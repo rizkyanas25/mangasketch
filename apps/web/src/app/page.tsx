@@ -20,6 +20,7 @@ import { HankoStamp } from '@/components/HankoStamp';
 export default function Home() {
   const { session, user, login } = useAuth();
   const setIsGenerating = useUiStore((state) => state.setIsGenerating);
+  const showToast = useUiStore((state) => state.showToast);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Local state for form controls
@@ -41,6 +42,13 @@ export default function Home() {
   useEffect(() => {
     setIsGenerating(isPending);
   }, [isPending, setIsGenerating]);
+
+  // Trigger global success toast when sketch is successfully generated (only for logged-in/auth users)
+  useEffect(() => {
+    if (state.data?.imageUrl && user) {
+      showToast('success', 'SKETCH SECURED! Saved to sketchbook.', true);
+    }
+  }, [state.data, user, showToast]);
 
   // Auto-scroll to canvas on mobile when generation starts
   useEffect(() => {

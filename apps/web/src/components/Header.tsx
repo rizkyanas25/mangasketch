@@ -16,6 +16,7 @@ export default function Header() {
   const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isGenerating = useUiStore((state) => state.isGenerating);
+  const isJiggling = useUiStore((state) => state.isJiggling);
 
   const isSketchesPage = pathname === '/sketches';
 
@@ -50,7 +51,7 @@ export default function Header() {
               href='/sketches'
               className={`block font-display text-lg tracking-wider px-5 py-2 border-2 border-foreground bg-background text-foreground transition-all rotate-[-2.5deg] neo-shadow-sm hover:-translate-y-0.5 hover:neo-shadow active:translate-y-0 cursor-pointer uppercase ${
                 isSketchesPage ? 'bg-screentone-dense' : 'hover:bg-screentone'
-              }`}
+              } ${isJiggling ? 'animate-jiggle' : ''}`}
             >
               MY SKETCHBOOK
             </Link>
