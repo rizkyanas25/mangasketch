@@ -11,8 +11,7 @@ import { MagicEdit, Lock } from 'pixelarticons/react';
 import StyleSelector from '@/components/StyleSelector';
 import { useAuth } from '@/providers/AuthProvider';
 import { generateSketchAction } from './actions';
-import InkLoader from '@/components/InkLoader';
-import ErrorPanel from '@/components/ErrorPanel';
+import MangaCanvas from '@/components/MangaCanvas';
 import { useUiStore } from '@/store/uiStore';
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { HankoStamp } from '@/components/HankoStamp';
@@ -197,34 +196,12 @@ export default function Home() {
           ref={canvasRef}
           className='lg:flex-[7] flex flex-col bg-background border-4 border-foreground neo-shadow aspect-[3/4] p-4'
         >
-          <div
-            className={`flex-1 w-full flex flex-col items-center justify-center border-4 border-dashed relative transition-colors overflow-hidden ${state.data?.imageUrl ? 'border-foreground' : 'border-foreground/30'}`}
-          >
-            {isPending ? (
-              <InkLoader />
-            ) : state.error ? (
-              <ErrorPanel error={state.error} />
-            ) : state.data?.imageUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={state.data.imageUrl}
-                alt='Generated Manga Panel'
-                className='w-full h-full object-contain'
-              />
-
-            ) : (
-              <div className='text-center max-w-sm p-6'>
-                <div className='font-display text-5xl text-foreground/20 mb-4 select-none'>
-                  BLANK PAGE
-                </div>
-                <p className='font-mono text-[10px] text-neutral tracking-wide uppercase'>
-                  DESCRIBE A SCENE ON THE LEFT.
-                  <br />
-                  YOUR CONCEPT WILL MATERIALIZE HERE.
-                </p>
-              </div>
-            )}
-          </div>
+          <MangaCanvas
+            imageUrl={state.data?.imageUrl}
+            isPending={isPending}
+            error={state.error}
+            prompt={prompt}
+          />
 
           {/* Iterate CTA (Only shown to authenticated users after generating a sketch) */}
           {state.data?.imageUrl && user && (

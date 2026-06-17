@@ -18,7 +18,11 @@ export async function generateSketchAction(
   const drawingStyle = formData.get("drawingStyle") as string;
   const watermarkText = formData.get("watermarkText") as string;
   const watermarkPosition = formData.get("watermarkPosition") as string;
+  const parentId = formData.get("parentId") as string;
+  const seedStr = formData.get("seed") as string;
   const token = formData.get("token") as string;
+
+  const seed = seedStr ? Number(seedStr) : undefined;
 
   if (!prompt || prompt.trim() === "") {
     return { data: null, error: "Please enter a valid prompt." };
@@ -41,6 +45,8 @@ export async function generateSketchAction(
         drawingStyle,
         watermarkText: watermarkText || undefined,
         watermarkPosition: watermarkPosition || undefined,
+        parentId: parentId || undefined,
+        seed: seed !== undefined && !isNaN(seed) ? seed : undefined,
       }),
     });
 

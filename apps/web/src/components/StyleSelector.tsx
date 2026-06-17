@@ -25,9 +25,9 @@ const DRAWING_STYLE_IMAGES: Record<DrawingStyle, string> = {
 };
 
 interface StyleSelectorProps {
-  mangaStyle: MangaStyle;
+  mangaStyle: MangaStyle | null;
   setMangaStyle: (style: MangaStyle) => void;
-  drawingStyle: DrawingStyle;
+  drawingStyle: DrawingStyle | null;
   setDrawingStyle: (style: DrawingStyle) => void;
   watermarkText: string;
   setWatermarkText: (text: string) => void;
