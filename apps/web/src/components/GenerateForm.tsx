@@ -151,7 +151,7 @@ export default function GenerateForm({
         className="w-full font-display border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none uppercase flex flex-col items-center justify-center gap-1 min-h-[76px] px-4 py-2 group"
       >
         <span className="flex items-center justify-center gap-2 text-lg md:text-xl">
-          <MagicEdit className={`w-6 h-6 ${isGenerating ? 'animate-sketch' : ''}`} />
+          <MagicEdit className="w-6 h-6" />
           {buttonText}
         </span>
         {mode === 'create' && hasExistingImage && !(isPageLoading || isGenerating) && (

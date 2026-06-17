@@ -145,6 +145,11 @@ export default function Home() {
             isPending={isPending}
             error={state.error}
             prompt={state.data?.prompt || ''}
+            sketchId={state.data?.id}
+            mangaStyle={state.data?.mangaStyle}
+            drawingStyle={state.data?.drawingStyle}
+            seed={state.data?.seed}
+            saved={state.data?.saved}
           />
 
           {/* Iterate CTA (Only shown to authenticated users after generating a sketch) */}
@@ -153,7 +158,7 @@ export default function Home() {
               href={`/sketches/${state.data.id}`}
               className='mt-4 w-full font-display text-lg md:text-xl py-4 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all uppercase flex items-center justify-center gap-2'
             >
-              <MagicEdit className='w-5 h-5 animate-sketch' />
+              <MagicEdit className='w-5 h-5' />
               ITERATE & RESKETCH THIS PANEL
             </Link>
           )}

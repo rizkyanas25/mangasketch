@@ -30,7 +30,9 @@ export default function SketchCard({
         <img
           src={latest.image_url}
           alt={latest.prompt}
-          className='w-full h-full object-cover'
+          className='w-full h-full object-cover select-none'
+          onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
         />
         {/* Version Count Badge */}
         <div className='absolute top-3 right-3 font-mono text-[10px] font-bold border-2 border-foreground bg-background text-foreground px-2 py-1 select-none'>

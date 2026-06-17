@@ -204,6 +204,11 @@ export default function SketchDetailPage() {
             loadingType={isPageLoading ? 'fetch' : 'generate'}
             error={generationError}
             prompt={activeSketch?.prompt}
+            sketchId={activeSketch?.id}
+            mangaStyle={activeSketch?.manga_style}
+            drawingStyle={activeSketch?.drawing_style}
+            seed={activeSketch?.seed}
+            saved={true}
           />
           
           {/* Active Sketch Details */}
@@ -278,7 +283,9 @@ export default function SketchDetailPage() {
                       <img
                         src={ver.image_url}
                         alt={verLabel}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover select-none"
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable={false}
                       />
                       {isActive && (
                         <div className="absolute top-1 left-1 bg-foreground text-background px-1 py-0.5 font-mono text-[8px] font-bold border border-background flex items-center gap-0.5 select-none z-10">
