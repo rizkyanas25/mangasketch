@@ -45,9 +45,18 @@ export default function SketchCard({
             <span>{`${latest.manga_style} • ${latest.drawing_style.replace(/_/g, ' ')}`}</span>
             <span>{formatDate(latest.created_at)}</span>
           </div>
-          <p className='font-sans text-xs line-clamp-2 uppercase font-medium min-h-[2.5rem] mt-1 text-foreground leading-relaxed'>
-            {latest.prompt}
-          </p>
+          <div className='relative group/prompt-tooltip min-h-[2.5rem] mt-1'>
+            <p className='font-sans text-xs line-clamp-2 uppercase font-medium text-foreground leading-relaxed cursor-help'>
+              {latest.prompt}
+            </p>
+            {/* Manga speech-bubble tooltip */}
+            <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/prompt-tooltip:block w-56 bg-background border-2 border-foreground p-3 text-[10px] text-foreground neo-shadow-sm z-30 normal-case font-mono leading-tight rounded-none'>
+              {/* The speech bubble notch */}
+              <div className='absolute top-full left-1/2 -translate-x-1/2 border-x-[6px] border-t-[6px] border-x-transparent border-t-foreground' />
+              <div className='absolute top-full left-1/2 -translate-x-1/2 -mt-[2px] border-x-[5px] border-t-[5px] border-x-transparent border-t-background z-10' />
+              {latest.prompt}
+            </div>
+          </div>
         </div>
 
         <div className='flex items-center justify-between mt-3 pt-3 border-t-2 border-foreground/10'>

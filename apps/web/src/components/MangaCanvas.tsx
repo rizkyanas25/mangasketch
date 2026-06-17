@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import InkLoader from './InkLoader';
-import ErrorPanel from './ErrorPanel';
+import CanvasPanelLoading from './CanvasPanelLoading';
+import CanvasPanelError from './CanvasPanelError';
 
 interface MangaCanvasProps {
   imageUrl?: string | null;
   isPending: boolean;
   error: string | null;
   prompt?: string;
+  loadingType?: 'fetch' | 'generate';
 }
 
 export default function MangaCanvas({
@@ -16,6 +17,7 @@ export default function MangaCanvas({
   isPending,
   error,
   prompt = 'Generated Manga Panel',
+  loadingType = 'generate',
 }: MangaCanvasProps) {
   const hasImage = !!imageUrl;
 
@@ -26,9 +28,9 @@ export default function MangaCanvas({
       }`}
     >
       {isPending ? (
-        <InkLoader />
+        <CanvasPanelLoading loadingType={loadingType} />
       ) : error ? (
-        <ErrorPanel error={error} />
+        <CanvasPanelError error={error} />
       ) : imageUrl ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img

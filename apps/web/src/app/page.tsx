@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useActionState, useEffect } from 'react';
+import React, { useRef, useActionState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   MangaStyle,
@@ -8,7 +8,7 @@ import {
   WatermarkPosition,
 } from '@mangasketch/shared';
 import { MagicEdit, Lock } from 'pixelarticons/react';
-import StyleSelector from '@/components/StyleSelector';
+import GenerateForm from '@/components/GenerateForm';
 import { useAuth } from '@/providers/AuthProvider';
 import { generateSketchAction } from './actions';
 import MangaCanvas from '@/components/MangaCanvas';
@@ -21,17 +21,6 @@ export default function Home() {
   const setIsGenerating = useUiStore((state) => state.setIsGenerating);
   const showToast = useUiStore((state) => state.showToast);
   const canvasRef = useRef<HTMLDivElement>(null);
-
-  // Local state for form controls
-  const [prompt, setPrompt] = useState('');
-  const [mangaStyle, setMangaStyle] = useState<MangaStyle>('SHONEN');
-  const [drawingStyle, setDrawingStyle] =
-    useState<DrawingStyle>('ROUGH_SKETCH');
-
-  // Hanko Watermark state (starts empty, placeholder is Your initial)
-  const [watermarkText, setWatermarkText] = useState('');
-  const [watermarkPosition, setWatermarkPosition] =
-    useState<WatermarkPosition>('BOTTOM_RIGHT');
 
   const [state, formAction, isPending] = useActionState(generateSketchAction, {
     data: null,
@@ -56,10 +45,26 @@ export default function Home() {
     }
   }, [isPending]);
 
-  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (e.target.value.length <= 500) {
-      setPrompt(e.target.value);
+  const handleGenerateSubmit = (formData: {
+    prompt: string;
+    mangaStyle: MangaStyle;
+    drawingStyle: DrawingStyle;
+    watermarkText: string;
+    watermarkPosition: WatermarkPosition;
+    lockSeed: boolean;
+  }) => {
+    const fd = new FormData();
+    fd.append('token', session?.access_token || '');
+    fd.append('prompt', formData.prompt);
+    fd.append('mangaStyle', formData.mangaStyle);
+    fd.append('drawingStyle', formData.drawingStyle);
+    if (formData.watermarkText) {
+      fd.append('watermarkText', formData.watermarkText);
+      fd.append('watermarkPosition', formData.watermarkPosition);
     }
+    React.startTransition(() => {
+      formAction(fd);
+    });
   };
 
   // Auto-cache anonymous sketch data to localStorage immediately upon generation
@@ -124,73 +129,12 @@ export default function Home() {
       {/* 2. Main Workspace: Flex Row (Form Left, Canvas Right) */}
       <div className='flex flex-col lg:flex-row gap-8'>
         {/* Left: Input Form Panel */}
-        <form
-          action={formAction}
-          className='lg:flex-[5] flex flex-col gap-6 bg-background border-4 border-foreground p-6 neo-shadow'
-        >
-          {/* Hidden inputs to pass states to Server Action */}
-          <input
-            type='hidden'
-            name='token'
-            value={session?.access_token || ''}
-          />
-          <input type='hidden' name='mangaStyle' value={mangaStyle} />
-          <input type='hidden' name='drawingStyle' value={drawingStyle} />
-          <input type='hidden' name='watermarkText' value={watermarkText} />
-          <input
-            type='hidden'
-            name='watermarkPosition'
-            value={watermarkPosition}
-          />
-
-          {/* Prompt Textarea */}
-          <div className='flex flex-col gap-2'>
-            <label className='font-mono text-xs font-bold uppercase tracking-wider flex justify-between'>
-              <span>DESCRIBE YOUR SCENE</span>
-              <span className='text-neutral'>{prompt.length}/500</span>
-            </label>
-            <textarea
-              name='prompt'
-              value={prompt}
-              disabled={isPending}
-              onChange={handlePromptChange}
-              placeholder='E.G., YOUNG PIRATE CAPTAIN DESCENDING FROM THE SKY ABOVE A BATTLEFIELD, SOLDIERS LOOKING UP IN SHOCK, THE FINAL WAR ABOUT TO BEGIN...'
-              className={`w-full min-h-[120px] p-3 border-2 border-foreground bg-background text-foreground font-mono text-sm placeholder:font-mono placeholder:text-sm placeholder:text-neutral focus:outline-none focus:ring-2 focus:ring-foreground focus:ring-offset-2 transition-all resize-none rounded-none uppercase ${
-                isPending ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            />
-          </div>
-
-          {/* Style Selector including Hanko options */}
-          <StyleSelector
-            mangaStyle={mangaStyle}
-            setMangaStyle={setMangaStyle}
-            drawingStyle={drawingStyle}
-            setDrawingStyle={setDrawingStyle}
-            watermarkText={watermarkText}
-            setWatermarkText={setWatermarkText}
-            watermarkPosition={watermarkPosition}
-            setWatermarkPosition={setWatermarkPosition}
-            disabled={isPending}
-          />
-
-          {/* Full-Width Generate Button */}
-          <button
-            type='submit'
-            disabled={isPending || !prompt.trim()}
-            className='w-full font-display border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none uppercase flex flex-col items-center justify-center gap-1 min-h-[76px] px-4 py-2 group'
-          >
-            <span className='flex items-center justify-center gap-2 text-lg md:text-xl'>
-              <MagicEdit className='w-6 h-6' />
-              {state.data?.imageUrl ? 'SKETCH A NEW IDEA' : 'SKETCH THIS IDEA'}
-            </span>
-            {state.data?.imageUrl && (
-              <span className='font-mono text-[9px] text-background/60 group-hover:text-foreground/60 tracking-wider lowercase normal-case select-none'>
-                (* starts a new sketch family in your sketchbook)
-              </span>
-            )}
-          </button>
-        </form>
+        <GenerateForm
+          mode="create"
+          isGenerating={isPending}
+          hasExistingImage={!!state.data?.imageUrl}
+          onSubmit={handleGenerateSubmit}
+        />
 
         <section
           ref={canvasRef}
@@ -200,7 +144,7 @@ export default function Home() {
             imageUrl={state.data?.imageUrl}
             isPending={isPending}
             error={state.error}
-            prompt={prompt}
+            prompt={state.data?.prompt || ''}
           />
 
           {/* Iterate CTA (Only shown to authenticated users after generating a sketch) */}

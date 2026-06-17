@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
 import { deleteSketchAction } from '../actions';
 import { WarningDiamond, MagicEdit } from 'pixelarticons/react';
-import ErrorPanel from '@/components/ErrorPanel';
+import CanvasPanelError from '@/components/CanvasPanelError';
 import SketchCard from '@/components/SketchCard';
 import SketchSkeletonCard from '@/components/SketchSkeletonCard';
 import { Sketch, GetSketchesResponse } from '@mangasketch/shared';
@@ -195,7 +195,7 @@ export default function SketchesPage() {
         </div>
       ) : error ? (
         <div className='flex flex-col items-center justify-center p-6 border-4 border-foreground bg-background neo-shadow max-w-xl mx-auto my-12'>
-          <ErrorPanel error={error.message || 'Failed to fetch sketchbook'} />
+          <CanvasPanelError error={error.message || 'Failed to fetch sketchbook'} />
           <button
             onClick={() => refetch()}
             className='mt-6 font-display text-lg px-8 py-3 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase'
