@@ -25,9 +25,33 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MangaSketch | Neo-Brutalist Manga AI Sketch Generator',
+  title: 'MangaSketch — AI Manga Sketch & Concept Art Generator',
   description:
-    'Turn your manga concepts into stylized black-and-white ink sketches in seconds with Pollinations AI.',
+    'Turn your manga storyboards, character ideas, and scene concepts into stylized black-and-white ink sketches in seconds. Built for mangakas and comic artists.',
+  keywords: [
+    'manga',
+    'mangaka',
+    'sketch',
+    'AI image generator',
+    'concept art',
+    'storyboarding',
+    'ink drawings',
+    'screentone',
+    'anime art',
+    'layout visualizer',
+  ],
+  openGraph: {
+    title: 'MangaSketch — AI Manga Sketch & Concept Art Generator',
+    description:
+      'An AI concept art assistant for mangakas and comic artists. Generate black & white manga storyboards, character sketches, and screentone panels instantly.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MangaSketch — AI Manga Sketch & Concept Art Generator',
+    description:
+      'Turn your manga storyboards, character ideas, and scene concepts into stylized black-and-white ink sketches in seconds.',
+  },
 };
 
 export default function RootLayout({
