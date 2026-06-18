@@ -89,7 +89,7 @@ vi.mock('../services/sketchService', () => {
         };
       }),
       uploadSketchToStorage: vi.fn().mockImplementation(async (buffer: Buffer, filepath: string) => {
-        return 'http://example.com/recovered-sketch.png';
+        return 'http://example.com/recovered-sketch.webp';
       }),
       saveSketchToDatabase: vi.fn().mockImplementation(async (sketchData: any) => {
         return {
@@ -192,7 +192,7 @@ describe('Sketches API Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.saved).toBe(false);
       expect(res.body.seed).toBe(42);
-      expect(res.body.imageUrl).toContain('data:image/png;base64,');
+      expect(res.body.imageUrl).toContain('data:image/webp;base64,');
       expect(res.body.watermarkText).toBe('NY');
       expect(res.body.watermarkPosition).toBe('BOTTOM_RIGHT');
       
@@ -210,7 +210,7 @@ describe('Sketches API Routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.saved).toBe(false);
-      expect(res.body.imageUrl).toContain('data:image/png;base64,');
+      expect(res.body.imageUrl).toContain('data:image/webp;base64,');
       expect(res.body.watermarkText).toBeUndefined();
       expect(res.body.watermarkPosition).toBe('BOTTOM_RIGHT');
       
@@ -225,14 +225,14 @@ describe('Sketches API Routes', () => {
           prompt: 'recovered sketch',
           mangaStyle: 'SHONEN',
           drawingStyle: 'INKED_MANGA',
-          imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          imageUrl: 'data:image/webp;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
           seed: 99
         });
 
       expect(res.status).toBe(201);
       expect(res.body.saved).toBe(true);
       expect(res.body.id).toBe('recovered-sketch-id');
-      expect(res.body.imageUrl).toBe('http://example.com/recovered-sketch.png');
+      expect(res.body.imageUrl).toBe('http://example.com/recovered-sketch.webp');
       expect(res.body.seed).toBe(99);
       
       expect(AiService.generateMangaPanel).not.toHaveBeenCalled();

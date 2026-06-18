@@ -299,6 +299,7 @@ export default function SketchesPage() {
         mangaStyle={sketchToDelete?.latest.manga_style || ''}
         drawingStyle={sketchToDelete?.latest.drawing_style || ''}
         prompt={sketchToDelete?.latest.prompt || ''}
+        createdAt={sketchToDelete?.latest.created_at || ''}
       />
     </div>
   );

@@ -9,10 +9,11 @@ export class SketchService {
    * @returns Public URL of the uploaded image
    */
   static async uploadSketchToStorage(buffer: Buffer, filepath: string): Promise<string> {
+    const contentType = filepath.endsWith('.webp') ? 'image/webp' : 'image/png';
     const { data, error } = await supabase.storage
       .from('sketches')
       .upload(filepath, buffer, {
-        contentType: 'image/png',
+        contentType,
         upsert: true
       });
 

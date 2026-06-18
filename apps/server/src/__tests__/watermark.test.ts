@@ -63,7 +63,7 @@ describe('Watermark Utility', () => {
       const metadata = await sharp(result).metadata();
       expect(metadata.width).toBe(768);
       expect(metadata.height).toBe(1024);
-      expect(metadata.format).toBe('png');
+      expect(metadata.format).toBe('webp');
     });
   });
 });

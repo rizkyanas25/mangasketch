@@ -126,7 +126,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     }
 
     // 1.5 Handle post-auth recovery upload of a pre-generated anonymous sketch
-    if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('data:image/png;base64,')) {
+    if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('data:image/webp;base64,')) {
       if (!req.user) {
         return res.status(401).json({
           code: 'UNAUTHORIZED',
@@ -134,12 +134,12 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
         });
       }
 
-      const base64Data = imageUrl.replace(/^data:image\/png;base64,/, '');
+      const base64Data = imageUrl.replace(/^data:image\/webp;base64,/, '');
       const finalBuffer = Buffer.from(base64Data, 'base64');
       const userId = req.user.id;
       const timestamp = Date.now();
       const randomSuffix = crypto.randomBytes(3).toString('hex');
-      const filepath = `${userId}/${timestamp}_${randomSuffix}.png`;
+      const filepath = `${userId}/${timestamp}_${randomSuffix}.webp`;
 
       // Upload directly to storage (no AI call)
       const storageUrl = await SketchService.uploadSketchToStorage(finalBuffer, filepath);
@@ -211,8 +211,8 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       const timestamp = Date.now();
       const randomSuffix = crypto.randomBytes(3).toString('hex');
       
-      // option 3: format name user_id/timestamp_suffix.png
-      const filepath = `${userId}/${timestamp}_${randomSuffix}.png`;
+      // option 3: format name user_id/timestamp_suffix.webp
+      const filepath = `${userId}/${timestamp}_${randomSuffix}.webp`;
 
       // upload generated buffer to storage
       const imageUrl = await SketchService.uploadSketchToStorage(finalBuffer, filepath);
@@ -246,7 +246,7 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     } else {
       // anonymous user: return image as base64 data url
       const base64Image = finalBuffer.toString('base64');
-      const dataUrl = `data:image/png;base64,${base64Image}`;
+      const dataUrl = `data:image/webp;base64,${base64Image}`;
       const tempId = crypto.randomUUID();
 
       const responsePayload: GenerateSketchResponse = {
