@@ -76,7 +76,9 @@ export default function SketchesPage() {
   const [displayLimit, setDisplayLimit] = useState(12);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const [sketchToDelete, setSketchToDelete] = useState<GroupedSketch | null>(null);
+  const [sketchToDelete, setSketchToDelete] = useState<GroupedSketch | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -152,16 +154,23 @@ export default function SketchesPage() {
           return {
             ...oldData,
             sketches: oldData.sketches.filter(
-              (s) => s.id !== sketchToDelete.rootId && s.parent_id !== sketchToDelete.rootId
+              (s) =>
+                s.id !== sketchToDelete.rootId &&
+                s.parent_id !== sketchToDelete.rootId,
             ),
           };
-        }
+        },
       );
 
       // 3. Invalidate query in background (no await)
       queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
 
-      showToast('deleted', 'SKETCH SCRAPPED! Removed from sketchbook.', false, 2500);
+      showToast(
+        'deleted',
+        'SKETCH SCRAPPED! Removed from sketchbook.',
+        false,
+        2500,
+      );
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error
@@ -213,7 +222,9 @@ export default function SketchesPage() {
         </div>
       ) : error ? (
         <div className='flex flex-col items-center justify-center p-6 border-4 border-foreground bg-background neo-shadow max-w-xl mx-auto my-12'>
-          <CanvasPanelError error={error.message || 'Failed to fetch sketchbook'} />
+          <CanvasPanelError
+            error={error.message || 'Failed to fetch sketchbook'}
+          />
           <button
             onClick={() => refetch()}
             className='mt-6 font-display text-lg px-8 py-3 border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase'
@@ -291,10 +302,10 @@ export default function SketchesPage() {
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
         error={deleteError}
-        title="SCRAP THIS ENTIRE SKETCH FAMILY?"
-        description="Are you sure you want to permanently erase this sketch family? This will erase the entire family of sketch versions."
-        confirmText="SCRAP SKETCH"
-        badgeText="[ ORIGINAL SKETCH ]"
+        title='SCRAP THIS ENTIRE SKETCH FAMILY?'
+        description='Are you sure you want to permanently erase this sketch family? This will erase the entire family of sketch versions.'
+        confirmText='SCRAP SKETCH'
+        badgeText='[ ORIGINAL SKETCH ]'
         imageUrl={sketchToDelete?.latest.image_url || ''}
         mangaStyle={sketchToDelete?.latest.manga_style || ''}
         drawingStyle={sketchToDelete?.latest.drawing_style || ''}

@@ -11,6 +11,17 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const applyTheme = (t: Theme) => {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  root.classList.remove("theme-tankobon", "theme-midnight");
+  if (t === "tankobon") {
+    root.classList.add("theme-tankobon");
+  } else if (t === "midnight") {
+    root.classList.add("theme-midnight");
+  }
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
@@ -18,22 +29,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Load saved theme preference
     const savedTheme = localStorage.getItem("mangasketch-theme") as Theme;
-    if (savedTheme && ["light", "tankobon", "midnight"].includes(savedTheme)) {
-      setThemeState(savedTheme);
-      applyTheme(savedTheme);
-    }
-    setMounted(true);
+    const handle = requestAnimationFrame(() => {
+      if (savedTheme && ["light", "tankobon", "midnight"].includes(savedTheme)) {
+        setThemeState(savedTheme);
+        applyTheme(savedTheme);
+      }
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
-
-  const applyTheme = (t: Theme) => {
-    const root = document.documentElement;
-    root.classList.remove("theme-tankobon", "theme-midnight");
-    if (t === "tankobon") {
-      root.classList.add("theme-tankobon");
-    } else if (t === "midnight") {
-      root.classList.add("theme-midnight");
-    }
-  };
 
   const setTheme = (t: Theme) => {
     setThemeState(t);

@@ -4,13 +4,15 @@ interface SketchSkeletonCardProps {
   variant?: 'gallery' | 'timeline';
 }
 
-export default function SketchSkeletonCard({ variant = 'gallery' }: SketchSkeletonCardProps) {
+export default function SketchSkeletonCard({
+  variant = 'gallery',
+}: SketchSkeletonCardProps) {
   if (variant === 'timeline') {
     return (
       <div className='w-28 md:w-32 flex-shrink-0 border-2 border-foreground bg-background rounded-none neo-shadow-sm flex flex-col animate-pulse'>
         {/* Image Section Skeleton */}
         <div className='aspect-[3/4] border-b-2 border-foreground bg-screentone-dense' />
-        
+
         {/* Info Section Skeleton (matches actual vertical layout) */}
         <div className='p-2 flex flex-col gap-0.5 bg-background justify-between flex-1 w-full border-t border-foreground/10'>
           {/* Version label */}
@@ -30,7 +32,7 @@ export default function SketchSkeletonCard({ variant = 'gallery' }: SketchSkelet
     <div className='border-4 border-foreground bg-background rounded-none neo-shadow-sm flex flex-col'>
       {/* Image Section Skeleton */}
       <div className='aspect-[3/4] border-b-4 border-foreground bg-screentone-dense animate-pulse relative' />
-      
+
       {/* Details Section Skeleton */}
       <div className='p-4 flex flex-col gap-2 bg-background flex-1 justify-between'>
         <div className='flex flex-col gap-1'>
@@ -39,7 +41,7 @@ export default function SketchSkeletonCard({ variant = 'gallery' }: SketchSkelet
             <div className='h-3.5 w-24 bg-foreground/10 rounded-sm' />
             <div className='h-3.5 w-16 bg-foreground/10 rounded-sm' />
           </div>
-          
+
           {/* Prompt Placeholder (Aligned to min-h-[2.5rem] mt-1) */}
           <div className='min-h-[2.5rem] mt-1 flex flex-col justify-center gap-1.5 animate-pulse'>
             <div className='h-3 w-full bg-foreground/10 rounded-sm' />

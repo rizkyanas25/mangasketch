@@ -12,7 +12,12 @@ interface UiState {
   isGenerating: boolean;
   setIsGenerating: (loading: boolean) => void;
   toast: ToastState | null;
-  showToast: (type: ToastType, message: string, triggerJiggle?: boolean, duration?: number) => void;
+  showToast: (
+    type: ToastType,
+    message: string,
+    triggerJiggle?: boolean,
+    duration?: number,
+  ) => void;
   hideToast: () => void;
   isJiggling: boolean;
   setIsJiggling: (jiggle: boolean) => void;

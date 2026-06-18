@@ -17,8 +17,10 @@ describe('Prompt Helper', () => {
       const result = wrapPrompt(prompt, 'SHONEN', 'INKED_MANGA');
 
       // Verify B&W modifiers are at the very beginning
-      expect(result.startsWith('black and white, monochrome, grayscale')).toBe(true);
-      
+      expect(result.startsWith('black and white, monochrome, grayscale')).toBe(
+        true,
+      );
+
       // Verify all components are included
       expect(result).toContain(prompt);
       expect(result).toContain('shonen manga style');

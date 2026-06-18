@@ -8,17 +8,23 @@ export class SketchService {
    * @param filepath Target file path inside the bucket (e.g. 'user-id/filename.png')
    * @returns Public URL of the uploaded image
    */
-  static async uploadSketchToStorage(buffer: Buffer, filepath: string): Promise<string> {
+  static async uploadSketchToStorage(
+    buffer: Buffer,
+    filepath: string,
+  ): Promise<string> {
     const contentType = filepath.endsWith('.webp') ? 'image/webp' : 'image/png';
     const { data, error } = await supabase.storage
       .from('sketches')
       .upload(filepath, buffer, {
         contentType,
-        upsert: true
+        upsert: true,
       });
 
     if (error) {
-      console.error('[Sketch Service] Error uploading sketch to storage:', error);
+      console.error(
+        '[Sketch Service] Error uploading sketch to storage:',
+        error,
+      );
       throw new Error('STORAGE_UPLOAD_ERROR');
     }
 
@@ -28,7 +34,9 @@ export class SketchService {
       .getPublicUrl(filepath);
 
     if (!publicUrlData || !publicUrlData.publicUrl) {
-      console.error('[Sketch Service] Failed to retrieve public URL for uploaded sketch.');
+      console.error(
+        '[Sketch Service] Failed to retrieve public URL for uploaded sketch.',
+      );
       throw new Error('STORAGE_URL_ERROR');
     }
 
@@ -47,11 +55,11 @@ export class SketchService {
         .select('id, parent_id')
         .eq('id', currentId)
         .single();
-      
+
       if (error || !data) {
         return currentId;
       }
-      
+
       if (data.parent_id) {
         currentId = data.parent_id;
       } else {
@@ -89,7 +97,7 @@ export class SketchService {
         drawing_style: sketchData.drawingStyle,
         image_url: sketchData.imageUrl,
         seed: sketchData.seed,
-        parent_id: resolvedParentId
+        parent_id: resolvedParentId,
       })
       .select()
       .single();
@@ -130,7 +138,7 @@ export class SketchService {
    */
   static async getSketchWithHistory(
     sketchId: string,
-    userId: string
+    userId: string,
   ): Promise<{ sketch: Sketch; versions: Sketch[] }> {
     // 1. Fetch target sketch to verify existence & ownership
     const { data: targetSketch, error: targetError } = await supabase
@@ -141,7 +149,10 @@ export class SketchService {
       .single();
 
     if (targetError || !targetSketch) {
-      console.error('[Sketch Service] Sketch not found or access denied:', targetError);
+      console.error(
+        '[Sketch Service] Sketch not found or access denied:',
+        targetError,
+      );
       throw new Error('SKETCH_NOT_FOUND');
     }
 
@@ -156,13 +167,16 @@ export class SketchService {
       .order('created_at', { ascending: true }); // chronological order
 
     if (versionsError) {
-      console.error('[Sketch Service] Error fetching version history:', versionsError);
+      console.error(
+        '[Sketch Service] Error fetching version history:',
+        versionsError,
+      );
       throw new Error('DATABASE_FETCH_ERROR');
     }
 
     return {
       sketch: targetSketch as Sketch,
-      versions: (versions || []) as Sketch[]
+      versions: (versions || []) as Sketch[],
     };
   }
 
@@ -182,7 +196,10 @@ export class SketchService {
       .eq('user_id', userId);
 
     if (fetchError || !sketches || sketches.length === 0) {
-      console.error('[Sketch Service] Sketch not found or access denied:', fetchError);
+      console.error(
+        '[Sketch Service] Sketch not found or access denied:',
+        fetchError,
+      );
       throw new Error('SKETCH_NOT_FOUND');
     }
 
@@ -195,7 +212,10 @@ export class SketchService {
       .eq('user_id', userId);
 
     if (deleteError) {
-      console.error('[Sketch Service] Error deleting sketch from database:', deleteError);
+      console.error(
+        '[Sketch Service] Error deleting sketch from database:',
+        deleteError,
+      );
       throw new Error('DATABASE_DELETE_ERROR');
     }
 
@@ -218,12 +238,17 @@ export class SketchService {
           .from('sketches')
           .remove(filepaths);
         if (storageError) {
-          console.warn('[Sketch Service] Failed to remove images from storage:', storageError);
+          console.warn(
+            '[Sketch Service] Failed to remove images from storage:',
+            storageError,
+          );
         }
       }
     } catch (storageErr) {
-      console.warn('[Sketch Service] Error cleaning up storage files:', storageErr);
+      console.warn(
+        '[Sketch Service] Error cleaning up storage files:',
+        storageErr,
+      );
     }
   }
 }
-

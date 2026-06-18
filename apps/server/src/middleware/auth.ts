@@ -17,7 +17,7 @@ export interface AuthenticatedRequest extends Request {
 export async function optionalAuth(
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const authHeader = req.headers.authorization;
 
@@ -30,20 +30,27 @@ export async function optionalAuth(
   if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
     return res.status(401).json({
       code: 'UNAUTHORIZED',
-      message: 'Invalid Authorization header format. Expected "Bearer <token>".'
+      message:
+        'Invalid Authorization header format. Expected "Bearer <token>".',
     });
   }
 
   const token = parts[1];
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
     if (error || !user) {
-      console.warn('[Auth Middleware] Token verification failed:', error?.message || 'No user found');
+      console.warn(
+        '[Auth Middleware] Token verification failed:',
+        error?.message || 'No user found',
+      );
       return res.status(401).json({
         code: 'UNAUTHORIZED',
-        message: 'Invalid or expired authorization token.'
+        message: 'Invalid or expired authorization token.',
       });
     }
 
@@ -54,7 +61,7 @@ export async function optionalAuth(
     console.error('[Auth Middleware] Unexpected authentication error:', error);
     return res.status(500).json({
       code: 'UNKNOWN_ERROR',
-      message: 'An unexpected error occurred during authentication.'
+      message: 'An unexpected error occurred during authentication.',
     });
   }
 }

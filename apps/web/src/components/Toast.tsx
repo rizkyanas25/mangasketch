@@ -20,15 +20,17 @@ export default function Toast() {
     >
       {isSuccess ? (
         <>
-          <span className="font-mono text-lg font-bold">[✓]</span>
-          <span className="font-mono text-xs font-bold uppercase tracking-wider">
+          <span className='font-mono text-lg font-bold'>[✓]</span>
+          <span className='font-mono text-xs font-bold uppercase tracking-wider'>
             {toast.message}
           </span>
         </>
       ) : (
         <>
-          <span className="font-mono text-lg font-bold text-destructive">[✗]</span>
-          <span className="font-mono text-xs font-bold uppercase tracking-wider text-destructive">
+          <span className='font-mono text-lg font-bold text-destructive'>
+            [✗]
+          </span>
+          <span className='font-mono text-xs font-bold uppercase tracking-wider text-destructive'>
             {toast.message}
           </span>
         </>

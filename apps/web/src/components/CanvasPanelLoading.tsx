@@ -33,11 +33,16 @@ export default function CanvasPanelLoading({
   const [subtitleIndex, setSubtitleIndex] = useState(0);
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null);
 
-  const subtitles = loadingType === 'fetch' ? SUBTITLES_FETCH : SUBTITLES_GENERATE;
+  const subtitles =
+    loadingType === 'fetch' ? SUBTITLES_FETCH : SUBTITLES_GENERATE;
 
   useEffect(() => {
     // Pick a random quote index on mount to prevent hydration mismatch
-    setQuoteIndex(Math.floor(Math.random() * QUOTES.length));
+    const randomIdx = Math.floor(Math.random() * QUOTES.length);
+    const handle = requestAnimationFrame(() => {
+      setQuoteIndex(randomIdx);
+    });
+    return () => cancelAnimationFrame(handle);
   }, []);
 
   useEffect(() => {
@@ -57,7 +62,9 @@ export default function CanvasPanelLoading({
 
         {/* Dramatic Main Title */}
         <h2 className='font-display text-3xl md:text-4xl italic tracking-wide mb-4 leading-tight'>
-          {loadingType === 'fetch' ? 'Retrieving sketch' : 'Sketching your idea'}
+          {loadingType === 'fetch'
+            ? 'Retrieving sketch'
+            : 'Sketching your idea'}
         </h2>
 
         {/* Rotating Status Subtitle */}

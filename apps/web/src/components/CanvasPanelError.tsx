@@ -6,7 +6,11 @@ interface CanvasPanelErrorProps {
   error: string;
 }
 
-type ErrorVariant = 'CONNECTION_SEVERED' | 'DATA_CORRUPTION' | 'INK_DEPLETED' | 'GENERIC';
+type ErrorVariant =
+  | 'CONNECTION_SEVERED'
+  | 'DATA_CORRUPTION'
+  | 'INK_DEPLETED'
+  | 'GENERIC';
 
 function detectVariant(error: string): ErrorVariant {
   const lower = error.toLowerCase();
@@ -47,7 +51,7 @@ function InkDepleted({ error }: { error: string }) {
       {/* Screentone pattern & speedlines */}
       <div className='absolute inset-0 bg-screentone pointer-events-none opacity-20' />
       <div className='manga-speedlines absolute inset-0 pointer-events-none opacity-30' />
-      
+
       <div className='relative z-10 flex flex-col items-center'>
         <WarningDiamond className='w-16 h-16 mb-4 text-foreground opacity-60' />
         <h2 className='font-display text-3xl md:text-4xl tracking-wide uppercase mb-3 bg-foreground text-background px-3 py-1 neo-shadow-xs'>
@@ -57,7 +61,8 @@ function InkDepleted({ error }: { error: string }) {
           Your daily ink quota is exhausted.
         </p>
         <p className='font-sans text-xs text-neutral max-w-xs mb-4 uppercase font-semibold'>
-          Authenticate to get 15 daily sketches, or wait until 00:00 UTC for a fresh pot of ink.
+          Authenticate to get 15 daily sketches, or wait until 00:00 UTC for a
+          fresh pot of ink.
         </p>
         <p className='font-mono text-[9px] text-neutral/50 uppercase mt-2 max-w-xs border border-foreground/10 px-2 py-1 bg-background'>
           {error}

@@ -38,7 +38,6 @@ interface StyleSelectorProps {
   isDrawingStyleChanged?: boolean;
 }
 
-
 export default function StyleSelector({
   mangaStyle,
   setMangaStyle,
@@ -70,7 +69,9 @@ export default function StyleSelector({
           <label className='font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2'>
             <span>MANGA STYLE</span>
             {isMangaStyleChanged && (
-              <span className="text-destructive font-mono text-[9px] font-bold tracking-widest">[ CHANGED ]</span>
+              <span className='text-destructive font-mono text-[9px] font-bold tracking-widest'>
+                [ CHANGED ]
+              </span>
             )}
           </label>
           <div className='grid grid-cols-2 gap-2 flex-1'>
@@ -83,7 +84,9 @@ export default function StyleSelector({
                   disabled={disabled}
                   onClick={() => setMangaStyle(style)}
                   className={`relative overflow-hidden font-mono text-xs font-bold px-3 py-5 border-2 border-foreground uppercase text-left rounded-none transition-all ${
-                    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    disabled
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'cursor-pointer'
                   } ${
                     isSelected
                       ? 'bg-foreground text-background'
@@ -112,7 +115,9 @@ export default function StyleSelector({
           <label className='font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2'>
             <span>DRAWING STYLE</span>
             {isDrawingStyleChanged && (
-              <span className="text-destructive font-mono text-[9px] font-bold tracking-widest">[ CHANGED ]</span>
+              <span className='text-destructive font-mono text-[9px] font-bold tracking-widest'>
+                [ CHANGED ]
+              </span>
             )}
           </label>
           <div className='grid grid-cols-2 gap-2 flex-1'>
@@ -125,7 +130,9 @@ export default function StyleSelector({
                   disabled={disabled}
                   onClick={() => setDrawingStyle(style)}
                   className={`relative overflow-hidden font-mono text-xs font-bold px-3 py-5 border-2 border-foreground uppercase text-left rounded-none transition-all ${
-                    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    disabled
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'cursor-pointer'
                   } ${
                     isSelected
                       ? 'bg-foreground text-background'
@@ -133,7 +140,9 @@ export default function StyleSelector({
                         (disabled ? '' : 'hover:bg-screentone')
                   }`}
                 >
-                  <span className='relative z-10'>{style.replace(/_/g, ' ')}</span>
+                  <span className='relative z-10'>
+                    {style.replace(/_/g, ' ')}
+                  </span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={DRAWING_STYLE_IMAGES[style]}
@@ -178,7 +187,10 @@ export default function StyleSelector({
                 PREVIEW
               </label>
               <div className='border-2 border-foreground border-dashed p-1.5 bg-neutral-light/5 flex items-center justify-center flex-1 min-h-0 w-full sm:flex-none sm:w-auto sm:h-auto sm:p-2'>
-                <HankoStamp text={watermarkText} className='w-full h-full max-w-[64px] max-h-[64px] sm:w-24 sm:h-24' />
+                <HankoStamp
+                  text={watermarkText}
+                  className='w-full h-full max-w-[64px] max-h-[64px] sm:w-24 sm:h-24'
+                />
               </div>
             </div>
           </div>

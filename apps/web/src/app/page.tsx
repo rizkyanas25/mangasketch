@@ -114,7 +114,7 @@ export default function Home() {
           <div className='w-full h-full border-4 border-foreground neo-shadow-lg bg-background rotate-[4deg] relative overflow-hidden'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src='/assets/hero-panel.png'
+              src='/assets/hero-panel.webp'
               alt='Manga Panel Concept'
               className='w-full h-full object-cover relative z-0'
               onError={(e) => {

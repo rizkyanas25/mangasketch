@@ -81,7 +81,9 @@ export default function DeleteConfirmationModal({
           <div className='flex-1 flex flex-col justify-between overflow-hidden'>
             <div className='flex flex-col gap-1'>
               <div className='font-mono text-[9px] font-bold text-neutral uppercase flex items-center justify-between'>
-                <span>{mangaStyle} • {drawingStyle.replace(/_/g, ' ')}</span>
+                <span>
+                  {mangaStyle} • {drawingStyle.replace(/_/g, ' ')}
+                </span>
                 <span>{createdAt ? formatDate(createdAt) : ''}</span>
               </div>
               <p className='font-sans text-[11px] font-medium text-foreground line-clamp-3 uppercase leading-normal mt-0.5'>

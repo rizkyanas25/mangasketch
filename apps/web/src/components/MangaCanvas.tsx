@@ -43,7 +43,9 @@ export default function MangaCanvas({
     // Compile informatively structured filename
     const prefix = saved && sketchId ? sketchId.slice(0, 8) : 'anonymous';
     const mStyle = mangaStyle ? String(mangaStyle).toLowerCase() : 'manga';
-    const dStyle = drawingStyle ? String(drawingStyle).toLowerCase().replace(/_/g, '-') : 'style';
+    const dStyle = drawingStyle
+      ? String(drawingStyle).toLowerCase().replace(/_/g, '-')
+      : 'style';
     const seedVal = seed !== undefined ? seed : 'random';
     const fileName = `mangasketch-${prefix}-${mStyle}-${dStyle}-${seedVal}.png`;
 
@@ -94,7 +96,10 @@ export default function MangaCanvas({
         URL.revokeObjectURL(objectUrl);
       }, 'image/png');
     } catch (err) {
-      console.warn('CORS or canvas error, falling back to open in new tab:', err);
+      console.warn(
+        'CORS or canvas error, falling back to open in new tab:',
+        err,
+      );
       window.open(imageUrl, '_blank');
     }
   };

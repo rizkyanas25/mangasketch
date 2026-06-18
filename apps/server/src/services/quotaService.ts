@@ -18,7 +18,10 @@ export class QuotaService {
       now.getUTCFullYear(),
       now.getUTCMonth(),
       now.getUTCDate() + 1,
-      0, 0, 0, 0
+      0,
+      0,
+      0,
+      0,
     );
   }
 

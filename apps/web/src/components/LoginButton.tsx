@@ -9,9 +9,12 @@ interface LoginButtonProps {
   disabled?: boolean;
 }
 
-export function LoginButton({ isOnHeader = false, disabled = false }: LoginButtonProps) {
+export function LoginButton({
+  isOnHeader = false,
+  disabled = false,
+}: LoginButtonProps) {
   const { login } = useAuth();
-  
+
   return (
     <button
       type='button'
@@ -22,9 +25,7 @@ export function LoginButton({ isOnHeader = false, disabled = false }: LoginButto
       }`}
     >
       <GoogleIcon className='w-5 h-5 flex-shrink-0' />
-      <span className={isOnHeader ? 'hidden sm:inline' : 'inline'}>
-        LOGIN
-      </span>
+      <span className={isOnHeader ? 'hidden sm:inline' : 'inline'}>LOGIN</span>
     </button>
   );
 }
