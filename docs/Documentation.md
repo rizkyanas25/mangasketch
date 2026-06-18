@@ -416,3 +416,42 @@ This section documents the current limitations of the implementation and outline
 * **Current Limitation:** The frontend canvas-based WebP-to-PNG download reconstruction relies on fetching the image buffer via `fetch(imageUrl)` from Supabase Storage.
 * **Impact:** If the Supabase Storage bucket's CORS policy is misconfigured or lacks wildcard origin headers (`Access-Control-Allow-Origin: *`), the browser blocks the fetch request. The user is then forced to download the sketch via a fallback new-tab redirection, which serves the raw WebP file instead of the requested PNG.
 * **Production-Grade Solution:** Route image downloads through a custom proxy endpoint on the backend (e.g., `GET /api/sketches/:id/download`) which pulls the buffer server-side and streams it to the client with `Content-Disposition: attachment` headers, bypassing clientside CORS checks entirely.
+
+### 10. Flat Database Schema for Hierarchical Sketch Families
+* **Current Limitation:** The database only has one table called `sketches` to store everything. Because there are no separate tables for "Sketch Families" (projects) and "Versions" (drawings), the version tree hierarchy feels a bit messy. The data we save is also very minimal—we don't have user-friendly sketch names, only long UUID strings.
+* **Impact:** The frontend has to maximize the display using only this minimal data (e.g., cutting the long UUID into short titles like `PANEL #83735fdc` and calculating version numbers like `V1` or `V2` on the fly by sorting dates in memory). This makes the sketchbook flow feel a bit weird because we don't have proper project names or custom labels.
+* **Production-Grade Solution:** Create a normalized database schema with a `sketch_families` table (to store project names, custom labels, description, and user_id) and a separate `sketch_versions` table (to store image_url, prompt, seed, styles, and parent_id relationship) linked via foreign keys.
+
+---
+
+## Overly Developed & Polished Features
+
+The assignment brief says this project should take 7 to 8 hours of focused work. But since I have a 7-day deadline, I choose to spend a few hours each day to chip away at it according to my initial plan, plus making some adjustments along the way. I really fall in love with the manga niche and this project, so I decided to build it like a real product with high attention to product flow, UI, and UX polish. 
+
+On the backend side, I keep it as simple and minimal as possible because I am a frontend-heavy fullstack engineer. But for the product experience and UI/UX, I go far beyond the requirements to make this a stellar piece in my personal portfolio.
+
+Here are the features I built that are not in the requirements:
+
+### 1. Google OAuth Auth & Guest-to-User Conversion Flow
+* **Why built:** I want to separate the anonymous guest flow and the registered user flow. It works like a real SaaS product: guests can generate 5 sketches/day (tracked by IP) to test the app, but they see a CTA banner to login. If they log in via Google, their daily quota increases to 15, and all their drawings are saved permanently to PostgreSQL and Supabase Storage instead of disappearing. This makes data management much easier and creates a natural user acquisition loop.
+
+### 2. Sketches & Version Deletion Flow (Full CRUD)
+* **Why built:** The brief only asks to save and show sketches. But I want to make the CRUD cycle complete. Also, artists in real life often make rough drafts they do not like and want to trash them. Without a delete feature, the sketchbook gallery will be full of garbage sketches, which ruins the long-term user experience. I built a unified neobrutalist `DeleteConfirmationModal` that handles deleting specific versions (V2/V3) or scrapping the whole version family (V1).
+
+### 3. Manga Niche Multi-Theme System (Born from Personal Experience)
+* **Why built:** I got this idea from my own experience while developing this project. Because I often code late at night in a dark room, the stark white background (which is the main color of manga art) was really hurting my eyes. So I built a theme switcher with 3 options: Light, Tankobon (warm cream color like real physical manga paper), and Midnight (neo-brutalist dark mode) with theme-aware image filters. It makes the site much more comfortable to use.
+
+### 4. Chronological Version Control History (Git for Sketches)
+* **Why built:** In a real manga drawing workflow, artists iterate their sketches step-by-step. Re-generating shouldn't just overwrite the old drawing or save them as completely separate items in the gallery. I built a version tree system (V1, V2, V3...) with a horizontal history timeline and zero-latency caching using TanStack Query. Simple navigation transitions allow artists to switch between versions instantly to see their creative progress.
+
+### 5. Hanko Stamp & Manga Signature Marriage
+* **Why built:** I wanted to make a fun signature feature that stands out. In Japan, a Hanko is a personal name stamp used for official documents (like opening bank accounts or signing contracts) instead of a handwritten signature. It is not normally used on manga panels (mangakas usually use a handwritten sketch signature or street sign). But I decided to marry the Hanko stamp concept with the manga panel signature! The red Hanko stamp with Katakana `マンガスケッチ` (MangaSketch) acts as a branding watermark showing the image was generated on this platform, and users can add their own initials (up to 4 characters) to the bottom of the stamp to make it their own personal Hanko signature, just like in real life.
+
+### 6. Server-Side Grayscale Processing (Sharp)
+* **Why built:** Text-to-image AI models are random. Even if we write "black and white manga sketch", they often leak sepia, yellow, or blue tones. Programmatically converting the image buffer to grayscale in the backend before saving guarantees a 100% consistent traditional manga paper look.
+
+### 7. WebP-to-PNG CORS-Safe Download & Anti-Save Protection
+* **Why built:** I want the website to load super fast, so the backend saves images in WebP format (saving 90% file size, from 2.6MB to 270KB). But artists need high-quality PNGs for their portfolios. I built a custom download utility that programmatically draws the WebP onto an offscreen canvas and exports it as a high-res PNG, while disabling standard browser right-click dragging to protect the artwork.
+
+### 8. Monospace Manga Speech-Bubble Tooltips
+* **Why built:** Instead of using boring default browser tooltips for long prompts, I styled absolute-positioned tooltips to look exactly like manga speech bubbles (monospaced font, thick flat borders, and a tiny pointing notch) to keep the comic book theme consistent down to the micro-details.
