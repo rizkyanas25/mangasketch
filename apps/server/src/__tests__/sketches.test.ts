@@ -86,6 +86,28 @@ vi.mock('../services/sketchService', () => {
           sketch,
           versions: [sketch]
         };
+      }),
+      uploadSketchToStorage: vi.fn().mockImplementation(async (buffer: Buffer, filepath: string) => {
+        return 'http://example.com/recovered-sketch.png';
+      }),
+      saveSketchToDatabase: vi.fn().mockImplementation(async (sketchData: any) => {
+        return {
+          id: 'recovered-sketch-id',
+          user_id: sketchData.userId,
+          prompt: sketchData.prompt,
+          manga_style: sketchData.mangaStyle,
+          drawing_style: sketchData.drawingStyle,
+          image_url: sketchData.imageUrl,
+          seed: sketchData.seed,
+          parent_id: sketchData.parentId || null,
+          created_at: new Date().toISOString()
+        };
+      }),
+      deleteSketch: vi.fn().mockImplementation(async (sketchId: string, userId: string) => {
+        if (sketchId === '00000000-0000-0000-0000-000000000000') {
+          throw new Error('SKETCH_NOT_FOUND');
+        }
+        return;
       })
     }
   };
@@ -192,6 +214,29 @@ describe('Sketches API Routes', () => {
       
       expect(AiService.generateMangaPanel).toHaveBeenCalledTimes(1);
     });
+
+    it('should save pre-generated anonymous sketch without AI call if imageUrl is provided and auth is valid', async () => {
+      const res = await request(app)
+        .post('/api/sketches')
+        .set('Authorization', 'Bearer valid-token')
+        .send({
+          prompt: 'recovered sketch',
+          mangaStyle: 'SHONEN',
+          drawingStyle: 'INKED_MANGA',
+          imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+          seed: 99
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.saved).toBe(true);
+      expect(res.body.id).toBe('recovered-sketch-id');
+      expect(res.body.imageUrl).toBe('http://example.com/recovered-sketch.png');
+      expect(res.body.seed).toBe(99);
+      
+      expect(AiService.generateMangaPanel).not.toHaveBeenCalled();
+      expect(SketchService.uploadSketchToStorage).toHaveBeenCalled();
+      expect(SketchService.saveSketchToDatabase).toHaveBeenCalled();
+    });
   });
 
   describe('GET /api/sketches', () => {
@@ -254,6 +299,47 @@ describe('Sketches API Routes', () => {
       expect(res.body.versions).toBeDefined();
       expect(res.body.sketch.id).toBe(targetId);
       expect(SketchService.getSketchWithHistory).toHaveBeenCalledWith(targetId, 'mock-user-id');
+    });
+  });
+
+  describe('DELETE /api/sketches/:id', () => {
+    it('should return 401 if user is not authenticated', async () => {
+      const res = await request(app).delete('/api/sketches/11111111-1111-1111-1111-111111111111');
+      expect(res.status).toBe(401);
+      expect(res.body.code).toBe('UNAUTHORIZED');
+      expect(res.body.message).toContain('logged in');
+    });
+
+    it('should return 400 if sketch ID format is not a UUID', async () => {
+      const res = await request(app)
+        .delete('/api/sketches/invalid-uuid')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('INVALID_SKETCH_ID');
+      expect(res.body.message).toContain('Invalid sketch ID format');
+    });
+
+    it('should return 404 if sketch is not found', async () => {
+      const res = await request(app)
+        .delete('/api/sketches/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(404);
+      expect(res.body.code).toBe('SKETCH_NOT_FOUND');
+      expect(res.body.message).toContain('not found or access denied');
+    });
+
+    it('should return 200 and success status on successful deletion', async () => {
+      const targetId = '22222222-2222-2222-2222-222222222222';
+      const res = await request(app)
+        .delete(`/api/sketches/${targetId}`)
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('erased successfully');
+      expect(SketchService.deleteSketch).toHaveBeenCalledWith(targetId, 'mock-user-id');
     });
   });
 });

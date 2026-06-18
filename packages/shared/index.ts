@@ -99,3 +99,10 @@ export interface GetSketchDetailResponse {
   versions: Sketch[]; // Version history, including original and all variations
 }
 
+// API response payload returned upon successful deletion
+export interface DeleteSketchResponse {
+  success: boolean;
+  message: string;
+}
+
+

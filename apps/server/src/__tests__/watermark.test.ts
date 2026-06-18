@@ -8,8 +8,8 @@ describe('Watermark Utility', () => {
       const svg = generateWatermarkSvg(undefined, 'BOTTOM_RIGHT');
       expect(svg).toContain('<svg');
       expect(svg).not.toContain('<path'); // Path is the banner red chord
-      expect(svg).toContain('cx="704"'); // BOTTOM_RIGHT x
-      expect(svg).toContain('cy="960"'); // BOTTOM_RIGHT y
+      expect(svg).toContain('cx="688"'); // BOTTOM_RIGHT x
+      expect(svg).toContain('cy="944"'); // BOTTOM_RIGHT y
     });
 
     it('should generate SVG with banner and initials if userName is provided', () => {
@@ -28,16 +28,16 @@ describe('Watermark Utility', () => {
 
     it('should calculate coordinates correctly for all corners', () => {
       const svgTopLeft = generateWatermarkSvg('NY', 'TOP_LEFT');
-      expect(svgTopLeft).toContain('cx="64"');
-      expect(svgTopLeft).toContain('cy="64"');
+      expect(svgTopLeft).toContain('cx="80"');
+      expect(svgTopLeft).toContain('cy="80"');
 
       const svgTopRight = generateWatermarkSvg('NY', 'TOP_RIGHT');
-      expect(svgTopRight).toContain('cx="704"');
-      expect(svgTopRight).toContain('cy="64"');
+      expect(svgTopRight).toContain('cx="688"');
+      expect(svgTopRight).toContain('cy="80"');
 
       const svgBottomLeft = generateWatermarkSvg('NY', 'BOTTOM_LEFT');
-      expect(svgBottomLeft).toContain('cx="64"');
-      expect(svgBottomLeft).toContain('cy="960"');
+      expect(svgBottomLeft).toContain('cx="80"');
+      expect(svgBottomLeft).toContain('cy="944"');
     });
   });
 

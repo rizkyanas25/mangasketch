@@ -164,4 +164,65 @@ export class SketchService {
       versions: (versions || []) as Sketch[]
     };
   }
+
+  /**
+   * Deletes a sketch by ID. If it is a root parent, it will cascade delete all variations
+   * in the database due to foreign key constraints, and we will clean up all associated
+   * image files from storage.
+   * @param sketchId Sketch ID to delete
+   * @param userId User ID for ownership verification
+   */
+  static async deleteSketch(sketchId: string, userId: string): Promise<void> {
+    // 1. Fetch the sketch and any variations to get all image URLs
+    const { data: sketches, error: fetchError } = await supabase
+      .from('sketches')
+      .select('id, image_url')
+      .or(`id.eq.${sketchId},parent_id.eq.${sketchId}`)
+      .eq('user_id', userId);
+
+    if (fetchError || !sketches || sketches.length === 0) {
+      console.error('[Sketch Service] Sketch not found or access denied:', fetchError);
+      throw new Error('SKETCH_NOT_FOUND');
+    }
+
+    // 2. Delete the main sketch from database. Foreign key with ON DELETE CASCADE
+    // will delete all variation rows automatically.
+    const { error: deleteError } = await supabase
+      .from('sketches')
+      .delete()
+      .eq('id', sketchId)
+      .eq('user_id', userId);
+
+    if (deleteError) {
+      console.error('[Sketch Service] Error deleting sketch from database:', deleteError);
+      throw new Error('DATABASE_DELETE_ERROR');
+    }
+
+    // 3. Remove all associated image files from the public storage bucket
+    try {
+      const filepaths = sketches
+        .map((s) => {
+          const url = s.image_url;
+          const bucketMarker = '/sketches/';
+          const markerIndex = url.indexOf(bucketMarker);
+          if (markerIndex !== -1) {
+            return url.substring(markerIndex + bucketMarker.length);
+          }
+          return null;
+        })
+        .filter((p): p is string => p !== null);
+
+      if (filepaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('sketches')
+          .remove(filepaths);
+        if (storageError) {
+          console.warn('[Sketch Service] Failed to remove images from storage:', storageError);
+        }
+      }
+    } catch (storageErr) {
+      console.warn('[Sketch Service] Error cleaning up storage files:', storageErr);
+    }
+  }
 }
+

@@ -110,7 +110,7 @@ sketches table:
 - Sketchbook query: group by root parent, show latest version, **cursor-based pagination** (load more as user scroll)
 - Detail query: get all rows where `id = X` or `parent_id = X`, order by `created_at DESC`
 
-- **[UPDATED ON DEVELOPMENT]**: 
+- **[UPDATED ON DEVELOPMENT]**:
   - To avoid complex recursive PostgreSQL queries, I implement a **flat-tree structure** where all variations point directly to the original root parent sketch (`parent_id = root parent id`). This is resolved dynamically in the backend using `getRootParentId()`.
   - Sketchbook query simply fetches all sketches for the user sorted by latest (`created_at DESC`).
   - Detail query retrieves the parent and all variations (`id = rootId OR parent_id = rootId`) sorted chronologically (`created_at ASC`) to render version sequence correctly in the UI.
@@ -122,7 +122,7 @@ To prevent abuse (NSFW, hate speech, explicit content) while keeping action-orie
 1. **Layer 1: Backend Text Moderation (Blocklist)**
    - Pre-request blocklist checks user prompt for highly offensive, sexual, or prohibited keywords.
    - If triggered, immediately returns `400: PROHIBITED_PROMPT` without hitting the AI provider.
-   - UI maps this to the dramatic manga error: **"PROHIBITED INK!"** or **"FORBIDDEN TECHNIQUE!"** (e.g. *"Your prompt violates our community guidelines. Keep it PG-13!"*).
+   - UI maps this to the dramatic manga error: **"PROHIBITED INK!"** or **"FORBIDDEN TECHNIQUE!"** (e.g. _"Your prompt violates our community guidelines. Keep it PG-13!"_).
 
 2. **Layer 2: Prompt Wrapper Safeguards**
    - Appends safety directives (`safe for work, PG-13, no nudity, no explicit content, no gore`) into the final wrapped prompt sent to Pollinations/Gemini.
@@ -183,6 +183,7 @@ I also use **TanStack Query** for server state management. It handle loading sta
 ### Backend: Express + TypeScript
 
 I go with separate Express backend instead of Next.js API routes for few reasons:
+
 - Clear separation between frontend and backend concern
 - Backend might need to handle heavy image processing and I dont want that to affect frontend server
 - Easier to scale independently. If the AI generation is slow, I can scale backend without touching frontend
@@ -203,6 +204,7 @@ Simple Google sign-in. No email/password to manage. User click login, Google han
 ### AI Provider: Pollinations.ai (primary) / Gemini (fallback)
 
 I start with Pollinations as primary AI provider because:
+
 - **Simple REST API**, send a GET request with encoded prompt, receive image binary directly
 - **Good model selection** for generating stylized artwork
 - **Free tier** that is enough for this use case
@@ -216,11 +218,10 @@ Both providers require API key, so setup complexity is similar. The decision wil
   - To guarantee a pure black-and-white output and eliminate color leakage, I programmatically convert the image buffer to grayscale using the **Sharp** library before applying the watermark.
 
 ### Hanko Stamp Watermark
-- **[UPDATED ON DEVELOPMENT]**: 
+
+- **[UPDATED ON DEVELOPMENT]**:
   - I added a traditional Japanese hanko stamp watermark to sketches to make them feel authentic like they were made by a real manga artist.
   - The watermark is a red stamp with Katakana text `マンガスケッチ` and user initials (optional, max 4 chars). It is always generated and applied by the backend using `sharp`.
-
-
 
 ### Monorepo Structure
 
@@ -250,6 +251,7 @@ In a real production project, I would probably separate the repos. Maybe even us
 I prioritize based on what the assignment value most: **working software with real API calls and proper error handling**.
 
 #### Phase 1: Foundation (Day 1)
+
 - Setup monorepo structure
 - Init Next.js + Express projects
 - Setup Supabase (database, storage, auth)
@@ -258,6 +260,7 @@ I prioritize based on what the assignment value most: **working software with re
 **Why first**: If the AI API doesnt work reliably, everything else is waste of time. I need to validate the core dependency first.
 
 #### Phase 2: Core Backend (Day 2)
+
 - Build `/api/generate` endpoint
 - Implement prompt wrapping (manga template)
 - Connect to Pollinations API
@@ -268,6 +271,7 @@ I prioritize based on what the assignment value most: **working software with re
 **Why second**: Backend is the foundation. Frontend cant do anything without working API.
 
 #### Phase 3: Core Frontend (Day 3-4)
+
 - Build generate page with form
 - Implement loading experience (meaningful, not just spinner)
 - Display generated result
@@ -278,13 +282,40 @@ I prioritize based on what the assignment value most: **working software with re
 
 **Why third**: Now I have working backend, I can build frontend with real data flowing through.
 
+- **[UPDATED ON DEVELOPMENT]**:
+  - **Zustand for Global UI State**:
+    I use Zustand (`useUiStore`) instead of putting everything inside React Context. It helps share the `isGenerating` loading state to the navigation Header. Because it uses selector-based subscription, it avoids re-rendering the whole Header or pages when generation is pending. Also, this store will be very useful when we need to share other global UI states later, like toast message queue or sidebar/drawer states.
+  - **Auth & Theme Providers separation**:
+    I split root providers into `AuthProvider` and `ThemeProvider` instead of one big context. This keeps concerns separated. Changing themes will not trigger any authentication session checks, keeping renders light. This separation also makes it easy to add other providers later (like ToastProvider or ReactQueryProvider) without making a single giant context file.
+  - **Retro Theme Switcher**:
+    I added a Neo-Brutalist theme switcher in the header with three curated modes:
+    1. `Light Ink` (high-contrast black/white manga paper style)
+    2. `Recycled Book / Tankobon` (warm sepia paper color, like vintage cheap Shonen Jump magazine print)
+    3. `Midnight Moon` (high-contrast dark mode)
+       Why this theme switcher exist: pure white background can be very blinding if user open the website at night. So I provide warm sepia (`Recycled Book`) and dark mode (`Midnight Moon`) to make it comfortable for eyes, while still looking premium and keeping the strong manga identity.
+
+- **[UPDATED ON DEVELOPMENT - PHASE 3 VISUAL & INTERACTIVE REFINEMENTS]**:
+  - **Two-Column Flexible Layout**:
+    Instead of single-column stacked layout, I go with side-by-side flex layout on desktop (Form `flex-[5]` and Canvas `flex-[7]`). This keeps the canvas inside strict `3:4` aspect ratio to match the exact scale of AI-generated output while fitting nicely beside the form.
+  - **Watermark Style Pills Overhaul**:
+    I upgrade simple style chips to custom grid buttons with AI-generated transparent watermark background, so user can better understand the context/example of each style, even though the final generated output might not match it 100%.
+  - **Hanko Stamp on Brand Logo**: I add the HankoStamp behind the brand logo text in the Header. This makes the brand logo look more authentic and emphasizes that the Hanko stamp is the signature mark of MangaSketch, especially since the Katakana inside the stamp spells "MangaSketch".
+
+- **[UPDATED ON DEVELOPMENT - PHASE 3 REFINING HOME]**:
+  - **Dynamic Generate CTA & Clear Generation Intent**:
+    To prevent user confusion after a successful sketch generation on the Home page (`/`), the primary submit button dynamically changes from `"SKETCH THIS IDEA"` to `"SKETCH A NEW IDEA"`, accompanied by an explicit subtext: `(* starts a new sketch family in your sketchbook)`. This visual feedback clarifies that clicking it starts a fresh concept branch, preventing users from mistakenly thinking they are modifying or overriding their current canvas result.
+  - **Direct Evolution Loop (Iterate & Resketch CTA)**:
+    Instead of forcing users to navigate through the `"MY SKETCHBOOK"` gallery to view, edit, or regenerate a sketch, I introduced a prominent `"ITERATE & RESKETCH THIS PANEL"` CTA under the canvas immediately post-generation. This gives authenticated users an instant, direct path to jump into the detail view (`/sketches/[id]`), where they can immediately fork, modify, or lock the composition seed of that panel.
+
 #### Phase 4: Polish + Deploy (Day 5)
+
 - UI polish, make it feel like real product, not assignment
 - Deploy to Vercel + Railway
 - Test live URL end to end
 - Write documentation
 
 #### Phase 5: Record Demo (Day 6)
+
 - Record Loom with real API calls
 - Show all failure states on camera
 - Write honest observation about limitations
