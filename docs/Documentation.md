@@ -252,7 +252,31 @@ This section documents the actual engineering decisions made during development.
 
 ---
 
-## 15. Actual App Journeys & Operations (High-Fidelity Flows)
+### 15. Backend-to-Frontend WebP Pipeline Migration
+
+- **Original Plan:** Save and serve files in standard raw PNG/JPEG formats.
+- **Actual Decision:** Migrated the backend watermark composition output from PNG to WebP with 85% quality, changing file extensions in Supabase storage and API response payloads.
+- **Why:** Grayscale/monochrome manga line art has large blocks of solid black and white. This matches WebP's compression algorithm perfectly, slashing file sizes by up to 90% (from ~2.0MB to ~100-150KB) while keeping lines crisp. This makes versions, sketchbook galleries, and canvases load instantly.
+
+---
+
+### 16. Client-Side High-Res PNG Download Reconstruction
+
+- **Original Plan:** Trigger direct browser download of the image URL served from storage.
+- **Actual Decision:** Overhauled the download button to fetch the WebP file, load it into an offscreen image, draw it on an offscreen `<canvas>` at its exact natural resolution, and export it back to a high-compatibility PNG file via `canvas.toBlob(..., 'image/png')` before triggering the browser's download prompt.
+- **Why:** Keeps the web interface lightning-fast by transferring lightweight WebP files, but preserves high-compatibility HD PNG output for users importing sketches into legacy graphic design tools (such as Photoshop, Procreate, or Clip Studio Paint) that do not natively open WebP files.
+
+---
+
+### 17. Daily Reset Calendar-Day Rate Limiting (Ink Quota)
+
+- **Original Plan:** Standard sliding-window rate limiters.
+- **Actual Decision:** Implemented a calendar-day rate limiter resetting at exactly `00:00 UTC` daily, with guest limits (5 generations/24h) and authenticated limits (15 generations/24h).
+- **Why:** Sliding-window rate limiters require keeping sliding timestamp arrays in memory per key, raising system memory costs. Calendar-day resets simplify arithmetic (using `getNextMidnightUTC()`), decrease overhead, and offer a transparent, predictable schedule to the user.
+
+---
+
+## Actual App Journeys & Operations (High-Fidelity Flows)
 
 These diagrams visualize the finalized actual architectures and request lifecycles implemented in the production codebase.
 
@@ -344,7 +368,7 @@ User Browser                  Express Backend                Supabase Storage / 
 
 ---
 
-## 16. Known Limitations & Production Trade-offs (The Honest Part)
+## Known Limitations & Production Trade-offs (The Honest Part)
 
 This section documents the current limitations of the implementation and outlines proposed production-grade solutions for future scalability.
 
@@ -387,3 +411,8 @@ This section documents the current limitations of the implementation and outline
 * **Current Limitation:** Authentication is handled directly on the frontend using the Supabase Client SDK, while the custom Express backend only decodes and validates the Bearer JWT token in middleware.
 * **Impact:** If the Express backend server is offline or experiencing database connection errors, the frontend website still loads and the user can successfully sign in/out via Google OAuth (since Auth requests go directly through Supabase API servers). However, the logged-in user will be unable to generate sketches, view their sketchbook, or perform deletions, leading to a confusing UX where "login succeeds, but the application is non-functional."
 * **Production-Grade Solution:** Route all auth actions through backend session endpoints (e.g., Express-managed session cookies) or implement a client-side health-check ping to the Express server to show a "Server Offline" banner and disable interaction if the backend is unreachable.
+
+### 9. Storage CORS Dependency for Clientside PNG Reconstruction
+* **Current Limitation:** The frontend canvas-based WebP-to-PNG download reconstruction relies on fetching the image buffer via `fetch(imageUrl)` from Supabase Storage.
+* **Impact:** If the Supabase Storage bucket's CORS policy is misconfigured or lacks wildcard origin headers (`Access-Control-Allow-Origin: *`), the browser blocks the fetch request. The user is then forced to download the sketch via a fallback new-tab redirection, which serves the raw WebP file instead of the requested PNG.
+* **Production-Grade Solution:** Route image downloads through a custom proxy endpoint on the backend (e.g., `GET /api/sketches/:id/download`) which pulls the buffer server-side and streams it to the client with `Content-Disposition: attachment` headers, bypassing clientside CORS checks entirely.
