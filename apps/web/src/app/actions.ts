@@ -1,6 +1,6 @@
 'use server';
 
-import { GenerateSketchResponse, DeleteSketchResponse } from "@mangasketch/shared";
+import { GenerateSketchResponse, DeleteSketchResponse, GetQuotaResponse } from "@mangasketch/shared";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -93,6 +93,37 @@ export async function deleteSketchAction(
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "An unknown network error occurred.";
     return { success: false, error: errorMsg };
+  }
+}
+
+export async function getQuotaAction(
+  token?: string
+): Promise<GetQuotaResponse> {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/sketches/quota`, {
+      method: "GET",
+      headers,
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      let errorMsg = "Failed to retrieve ink quota.";
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.message || errorMsg;
+      } catch {}
+      throw new Error(errorMsg);
+    }
+
+    return await response.json() as GetQuotaResponse;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to retrieve ink quota.";
+    throw new Error(errorMsg);
   }
 }
 

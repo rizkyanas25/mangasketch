@@ -3,6 +3,7 @@ import request from 'supertest';
 import app from '../app';
 import { AiService } from '../services/aiService';
 import { SketchService } from '../services/sketchService';
+import { QuotaService } from '../services/quotaService';
 import sharp from 'sharp';
 
 // Mock AiService.generateMangaPanel
@@ -116,6 +117,7 @@ vi.mock('../services/sketchService', () => {
 describe('Sketches API Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    QuotaService.reset();
   });
 
   describe('POST /api/sketches', () => {
@@ -340,6 +342,85 @@ describe('Sketches API Routes', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.message).toContain('erased successfully');
       expect(SketchService.deleteSketch).toHaveBeenCalledWith(targetId, 'mock-user-id');
+    });
+  });
+
+  describe('GET /api/sketches/quota', () => {
+    it('should return anonymous quota details if user is not authenticated', async () => {
+      const res = await request(app).get('/api/sketches/quota');
+      expect(res.status).toBe(200);
+      expect(res.body.limit).toBe(5);
+      expect(res.body.remaining).toBe(5);
+      expect(res.body.resetTime).toBeDefined();
+    });
+
+    it('should return authenticated user quota details if token is valid', async () => {
+      const res = await request(app)
+        .get('/api/sketches/quota')
+        .set('Authorization', 'Bearer valid-token');
+
+      expect(res.status).toBe(200);
+      expect(res.body.limit).toBe(15);
+      expect(res.body.remaining).toBe(15);
+      expect(res.body.resetTime).toBeDefined();
+    });
+  });
+
+  describe('Rate Limiting (Ink Quota) enforcement', () => {
+    it('should enforce anonymous limit of 5 requests and return 429 when exhausted', async () => {
+      // Consume 5 anonymous generations
+      for (let i = 0; i < 5; i++) {
+        const res = await request(app)
+          .post('/api/sketches')
+          .send({
+            prompt: `sketch ${i}`,
+            mangaStyle: 'SHONEN',
+            drawingStyle: 'INKED_MANGA'
+          });
+        expect(res.status).toBe(200);
+      }
+
+      // 6th generation should return 429
+      const res429 = await request(app)
+        .post('/api/sketches')
+        .send({
+          prompt: 'exhausted sketch',
+          mangaStyle: 'SHONEN',
+          drawingStyle: 'INKED_MANGA'
+        });
+
+      expect(res429.status).toBe(429);
+      expect(res429.body.code).toBe('RATE_LIMITED');
+      expect(res429.body.message).toContain('daily ink quota is exhausted');
+    });
+
+    it('should enforce authenticated limit of 15 requests and return 429 when exhausted', async () => {
+      // Consume 15 authenticated generations
+      for (let i = 0; i < 15; i++) {
+        const res = await request(app)
+          .post('/api/sketches')
+          .set('Authorization', 'Bearer valid-token')
+          .send({
+            prompt: `sketch ${i}`,
+            mangaStyle: 'SHONEN',
+            drawingStyle: 'INKED_MANGA'
+          });
+        expect(res.status).toBe(201);
+      }
+
+      // 16th generation should return 429
+      const res429 = await request(app)
+        .post('/api/sketches')
+        .set('Authorization', 'Bearer valid-token')
+        .send({
+          prompt: 'exhausted auth sketch',
+          mangaStyle: 'SHONEN',
+          drawingStyle: 'INKED_MANGA'
+        });
+
+      expect(res429.status).toBe(429);
+      expect(res429.body.code).toBe('RATE_LIMITED');
+      expect(res429.body.message).toContain('daily ink quota is exhausted');
     });
   });
 });

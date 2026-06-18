@@ -105,4 +105,11 @@ export interface DeleteSketchResponse {
   message: string;
 }
 
+// --- 7. Quota System ---
+export interface GetQuotaResponse {
+  limit: number;
+  remaining: number;
+  resetTime: string;
+}
+
 

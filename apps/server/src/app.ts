@@ -4,6 +4,7 @@ import cors from 'cors';
 import sketchesRouter from './routes/sketches';
 
 const app = express();
+app.set('trust proxy', true);
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Enable CORS for frontend requests

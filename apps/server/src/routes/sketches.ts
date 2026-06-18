@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 import { AiService } from '../services/aiService';
 import { SketchService } from '../services/sketchService';
+import { QuotaService } from '../services/quotaService';
 import { wrapPrompt, checkSafetyBlocklist } from '../utils/promptHelper';
 import { applyWatermark } from '../utils/watermark';
 import {
@@ -18,10 +19,15 @@ import {
   MAX_WATERMARK_LENGTH,
   GetSketchesResponse,
   GetSketchDetailResponse,
-  DeleteSketchResponse
+  DeleteSketchResponse,
+  GetQuotaResponse
 } from '@mangasketch/shared';
 
 const router = Router();
+
+// Generation Quota Limits
+const LIMIT_ANON = 5;
+const LIMIT_AUTH = 15;
 
 // regex to validate uuid format
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -174,6 +180,18 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
       });
     }
 
+    // 2.5 Check and consume daily ink quota
+    const isAuth = !!req.user;
+    const limit = isAuth ? LIMIT_AUTH : LIMIT_ANON;
+    const key = isAuth ? req.user!.id : req.ip || 'anonymous';
+    const quotaAllowed = QuotaService.consumeQuota(key, limit);
+    if (!quotaAllowed) {
+      return res.status(429).json({
+        code: 'RATE_LIMITED',
+        message: 'Ink Depleted! Your daily ink quota is exhausted.'
+      });
+    }
+
     // 3. wrap prompt with style and safety (layer 2 safety)
     const wrappedPrompt = wrapPrompt(prompt, mangaStyle, drawingStyle);
 
@@ -269,6 +287,23 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
     return res.status(statusCode).json({
       code: finalCode,
       message: finalMessage
+    });
+  }
+});
+
+// GET /api/sketches/quota - get the current user's generation quota
+router.get('/quota', optionalAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const isAuth = !!req.user;
+    const limit = isAuth ? LIMIT_AUTH : LIMIT_ANON;
+    const key = isAuth ? req.user!.id : req.ip || 'anonymous';
+    const quotaInfo = QuotaService.getQuota(key, limit);
+    return res.status(200).json(quotaInfo);
+  } catch (error) {
+    console.error('[Sketches Router] Error fetching quota:', error);
+    return res.status(500).json({
+      code: 'UNKNOWN_ERROR',
+      message: 'Failed to retrieve ink quota.'
     });
   }
 });

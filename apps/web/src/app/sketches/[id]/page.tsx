@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, startTransition } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
-import { GetSketchDetailResponse, MangaStyle, DrawingStyle, WatermarkPosition, Sketch } from '@mangasketch/shared';
+import { GetSketchDetailResponse, GetSketchesResponse, MangaStyle, DrawingStyle, WatermarkPosition, Sketch } from '@mangasketch/shared';
 import CanvasPanelError from '@/components/CanvasPanelError';
 import SketchSkeletonCard from '@/components/SketchSkeletonCard';
 import MangaCanvas from '@/components/MangaCanvas';
@@ -24,14 +24,10 @@ export default function SketchDetailPage() {
   const queryClient = useQueryClient();
   const showToast = useUiStore((state) => state.showToast);
 
-  // Local state to track which version is currently active/selected
-  const [activeVersionId, setActiveVersionId] = useState<string>(id);
-
   // Stable ID to keep the react-query key stable across sibling version switches
   const [familyId, setFamilyId] = useState<string>(id);
-
-  // Keep track of the last URL parameter ID we saw to detect transitions
-  const [prevId, setPrevId] = useState<string>(id);
+  const activeVersionId = id;
+  const prevIdRef = useRef(id);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -61,22 +57,43 @@ export default function SketchDetailPage() {
         }
         throw new Error('Failed to load sketch details.');
       }
-      return response.json() as Promise<GetSketchDetailResponse>;
+      const result = await response.json() as GetSketchDetailResponse;
+
+      // If we queried a child ID, resolve the root parent ID and pre-populate its cache instantly
+      const rootVersion = result.versions.find((v) => v.parent_id === null);
+      if (rootVersion && rootVersion.id !== familyId) {
+        queryClient.setQueryData(['sketch-detail', rootVersion.id, user?.id], result);
+      }
+
+      return result;
     },
     enabled: !!session?.access_token && !!familyId,
   });
 
-  // Render-time state synchronization when the URL ID changes
-  if (id !== prevId) {
-    setPrevId(id);
-    setActiveVersionId(id);
-
-    // Sync familyId with URL param `id` if it's a completely new sketch family
-    const isPartOfFamily = data?.versions.some((v) => v.id === id);
-    if (!isPartOfFamily) {
-      setFamilyId(id);
+  // Synchronize familyId only when the URL id parameter actually changes (navigated)
+  useEffect(() => {
+    if (id !== prevIdRef.current) {
+      prevIdRef.current = id;
+      if (data?.versions) {
+        const isPartOfFamily = data.versions.some((v) => v.id === id);
+        if (!isPartOfFamily) {
+          setFamilyId(id);
+        }
+      } else {
+        setFamilyId(id);
+      }
     }
-  }
+  }, [id, data?.versions]);
+
+  // Lock familyId to the absolute root ID when family versions data is loaded
+  useEffect(() => {
+    if (data?.versions) {
+      const rootVersion = data.versions.find((v) => v.parent_id === null);
+      if (rootVersion && familyId !== rootVersion.id) {
+        setFamilyId(rootVersion.id);
+      }
+    }
+  }, [data?.versions, familyId]);
 
   // Redirect to home if not logged in
   useEffect(() => {
@@ -98,7 +115,6 @@ export default function SketchDetailPage() {
     : '';
 
   const handleVersionSelect = (verId: string) => {
-    setActiveVersionId(verId);
     setGenerationError(null); // Clear previous generation error when switching versions
     router.replace(`/sketches/${verId}`, { scroll: false });
   };
@@ -140,22 +156,23 @@ export default function SketchDetailPage() {
       if (!response.data) {
         throw new Error('Failed to generate new sketch version.');
       }
-
-      // 1. Invalidate queries to fetch updated version timeline
-      await queryClient.invalidateQueries({
-        queryKey: ['sketch-detail', familyId, user?.id],
-      });
-
-      // 2. Show global success toast (no header jiggle)
+      // Show global success toast (no header jiggle)
       showToast('success', 'New version successfully inked!', false);
 
-      // 3. Redirect to the newly generated version
-      router.replace(`/sketches/${response.data.id}`, { scroll: false });
+      const newId = response.data.id;
+
+      // Settle state, navigate, and invalidate cache as a single React transition
+      startTransition(() => {
+        setIsGenerating(false);
+        router.replace(`/sketches/${newId}`, { scroll: false });
+        queryClient.invalidateQueries({
+          queryKey: ['sketch-detail', familyId, user?.id],
+        });
+      });
     } catch (err) {
       console.error('Re-sketch error:', err);
       const errMsg = err instanceof Error ? err.message : 'An unexpected error occurred.';
       setGenerationError(errMsg);
-    } finally {
       setIsGenerating(false);
     }
   };
@@ -179,6 +196,22 @@ export default function SketchDetailPage() {
         // Deleted entire family
         showToast('deleted', 'SKETCH SCRAPPED! Removed from sketchbook.', false, 2500);
         setSketchToDelete(null);
+
+        // Optimistically remove the deleted sketch family from the gallery query cache
+        queryClient.setQueryData<GetSketchesResponse>(
+          ['sketches', user?.id],
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              sketches: oldData.sketches.filter((s: Sketch) => s.id !== sketchToDelete.sketch.id && s.parent_id !== sketchToDelete.sketch.id),
+            };
+          }
+        );
+
+        // Invalidate in the background
+        queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
+
         router.replace('/sketches');
       } else {
         // Deleted a specific version
@@ -191,14 +224,29 @@ export default function SketchDetailPage() {
         // 2. Clear modal state instantly
         setSketchToDelete(null);
 
-        // 3. Select the latest remaining version and redirect to it instantly
-        if (latestRemaining) {
-          handleVersionSelect(latestRemaining.id);
-        } else {
-          router.replace('/sketches');
+        // 3. Optimistically update local query cache instantly to remove the deleted version
+        queryClient.setQueryData<GetSketchDetailResponse>(
+          ['sketch-detail', familyId, user?.id],
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              versions: remaining,
+            };
+          }
+        );
+
+        // 4. Select the latest remaining version and redirect to it instantly if we deleted the active version
+        const isActiveDeleted = sketchToDelete.sketch.id === activeVersionId;
+        if (isActiveDeleted) {
+          if (latestRemaining) {
+            handleVersionSelect(latestRemaining.id);
+          } else {
+            router.replace('/sketches');
+          }
         }
 
-        // 4. Invalidate queries in the background (no await)
+        // 5. Invalidate queries in the background (no await)
         queryClient.invalidateQueries({
           queryKey: ['sketch-detail', familyId, user?.id],
         });
@@ -320,89 +368,103 @@ export default function SketchDetailPage() {
             [...Array(4)].map((_, i) => (
               <SketchSkeletonCard key={i} variant="timeline" />
             ))
-          ) : data?.versions && data.versions.length > 0 ? (
-            [...data.versions]
-              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-              .map((ver, idx) => {
-                const isActive = ver.id === activeVersionId;
-                const isOriginal = ver.parent_id === null;
-                const verLabel = isOriginal ? 'V1 (ORIGINAL)' : `V${idx + 1}`;
-                
-                return (
-                  <button
-                    key={ver.id}
-                    type="button"
-                    onClick={() => handleVersionSelect(ver.id)}
-                    className={`w-28 md:w-32 flex-shrink-0 bg-background rounded-none flex flex-col text-left transition-all cursor-pointer group/version-card ${
-                      isActive
-                        ? 'border-4 border-foreground -translate-x-0.5 -translate-y-0.5 neo-shadow-sm'
-                        : 'border-2 border-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 hover:neo-shadow-xs active:translate-x-0 active:translate-y-0'
-                    }`}
-                  >
-                    {/* Image Container */}
-                    <div className="aspect-[3/4] border-b-2 border-foreground bg-screentone-dense relative overflow-hidden w-full">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={ver.image_url}
-                        alt={verLabel}
-                        className="w-full h-full object-cover select-none"
-                        onContextMenu={(e) => e.preventDefault()}
-                        draggable={false}
-                      />
-                      {isActive && (
-                        <div className="absolute top-1 left-1 bg-foreground text-background px-1 py-0.5 font-mono text-[8px] font-bold border border-background flex items-center gap-0.5 select-none z-10">
-                          ★ SELECTED
-                        </div>
-                      )}
-                      {/* Trash Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setSketchToDelete({
-                            sketch: ver,
-                            label: verLabel,
-                            index: idx,
-                            isOriginal: isOriginal,
-                          });
-                          setDeleteError(null);
-                        }}
-                        className="absolute top-1 right-1 bg-background text-foreground border border-foreground p-1 hover:text-destructive hover:scale-110 cursor-pointer z-20 flex items-center justify-center transition-all opacity-0 group-hover/version-card:opacity-100 focus:opacity-100"
-                        title={isOriginal ? "Delete entire sketch family" : "Delete this version"}
-                      >
-                        <Trash className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    
-                    {/* Version Details */}
-                    <div className="p-2 flex flex-col gap-0.5 bg-background justify-between flex-1 font-mono text-[8px] w-full border-t border-foreground/10">
-                      <div className="font-bold text-foreground uppercase text-[9px]">
-                        {verLabel}
-                      </div>
-                      <div className="text-neutral font-semibold uppercase mt-0.5">
-                        {ver.manga_style}
-                      </div>
-                      <div className="text-neutral font-semibold uppercase leading-tight truncate">
-                        {ver.drawing_style.replace(/_/g, ' ')}
-                      </div>
-                      <div className="text-neutral/80 text-[7px] uppercase mt-1 leading-none">
-                        {new Date(ver.created_at).toLocaleString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
-                        }).toUpperCase()}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })
           ) : (
-            <div className="text-center w-full py-6 font-mono text-xs text-neutral uppercase">
-              No versions available.
-            </div>
+            <>
+              {data?.versions && data.versions.length > 0 ? (
+                [...data.versions]
+                  .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                  .map((ver, idx) => {
+                    const isActive = ver.id === activeVersionId;
+                    const isOriginal = ver.parent_id === null;
+                    const verLabel = isOriginal ? 'V1 (ORIGINAL)' : `V${idx + 1}`;
+                    
+                    return (
+                      <div
+                        key={ver.id}
+                        onClick={() => handleVersionSelect(ver.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleVersionSelect(ver.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        className={`w-28 md:w-32 flex-shrink-0 bg-background rounded-none flex flex-col text-left transition-all cursor-pointer group/version-card ${
+                          isActive
+                            ? 'border-4 border-foreground -translate-x-0.5 -translate-y-0.5 neo-shadow-sm'
+                            : 'border-2 border-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 hover:neo-shadow-xs active:translate-x-0 active:translate-y-0'
+                        }`}
+                      >
+                        {/* Image Container */}
+                        <div className="aspect-[3/4] border-b-2 border-foreground bg-screentone-dense relative overflow-hidden w-full">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={ver.image_url}
+                            alt={verLabel}
+                            className="w-full h-full object-cover select-none"
+                            onContextMenu={(e) => e.preventDefault()}
+                            draggable={false}
+                          />
+                          {isActive && (
+                            <div className="absolute top-1 left-1 bg-foreground text-background px-1 py-0.5 font-mono text-[8px] font-bold border border-background flex items-center gap-0.5 select-none z-10">
+                              ★ SELECTED
+                            </div>
+                          )}
+                          {/* Trash Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setSketchToDelete({
+                                sketch: ver,
+                                label: verLabel,
+                                index: idx,
+                                isOriginal: isOriginal,
+                              });
+                              setDeleteError(null);
+                            }}
+                            className="absolute top-1 right-1 bg-background text-foreground border border-foreground p-1 hover:text-destructive hover:scale-110 cursor-pointer z-20 flex items-center justify-center transition-all opacity-0 group-hover/version-card:opacity-100 focus:opacity-100"
+                            title={isOriginal ? "Delete entire sketch family" : "Delete this version"}
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        
+                        {/* Version Details */}
+                        <div className="p-2 flex flex-col gap-0.5 bg-background justify-between flex-1 font-mono text-[8px] w-full border-t border-foreground/10">
+                          <div className="font-bold text-foreground uppercase text-[9px]">
+                            {verLabel}
+                          </div>
+                          <div className="text-neutral font-semibold uppercase mt-0.5">
+                            {ver.manga_style}
+                          </div>
+                          <div className="text-neutral font-semibold uppercase leading-tight truncate">
+                            {ver.drawing_style.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-neutral/80 text-[7px] uppercase mt-1 leading-none">
+                            {new Date(ver.created_at).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            }).toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              ) : (
+                <div className="text-center w-full py-6 font-mono text-xs text-neutral uppercase">
+                  No versions available.
+                </div>
+              )}
+              {isGenerating && (
+                <SketchSkeletonCard variant="timeline" />
+              )}
+            </>
           )}
         </div>
       </section>

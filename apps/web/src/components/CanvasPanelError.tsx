@@ -6,10 +6,18 @@ interface CanvasPanelErrorProps {
   error: string;
 }
 
-type ErrorVariant = 'CONNECTION_SEVERED' | 'DATA_CORRUPTION' | 'GENERIC';
+type ErrorVariant = 'CONNECTION_SEVERED' | 'DATA_CORRUPTION' | 'INK_DEPLETED' | 'GENERIC';
 
 function detectVariant(error: string): ErrorVariant {
   const lower = error.toLowerCase();
+  if (
+    lower.includes('quota') ||
+    lower.includes('rate limit') ||
+    lower.includes('rate_limited') ||
+    lower.includes('depleted')
+  ) {
+    return 'INK_DEPLETED';
+  }
   if (
     lower.includes('timeout') ||
     lower.includes('timed out') ||
@@ -31,6 +39,32 @@ function detectVariant(error: string): ErrorVariant {
     return 'DATA_CORRUPTION';
   }
   return 'GENERIC';
+}
+
+function InkDepleted({ error }: { error: string }) {
+  return (
+    <div className='relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden bg-background'>
+      {/* Screentone pattern & speedlines */}
+      <div className='absolute inset-0 bg-screentone pointer-events-none opacity-20' />
+      <div className='manga-speedlines absolute inset-0 pointer-events-none opacity-30' />
+      
+      <div className='relative z-10 flex flex-col items-center'>
+        <WarningDiamond className='w-16 h-16 mb-4 text-foreground opacity-60' />
+        <h2 className='font-display text-3xl md:text-4xl tracking-wide uppercase mb-3 bg-foreground text-background px-3 py-1 neo-shadow-xs'>
+          INK DEPLETED!
+        </h2>
+        <p className='font-sans text-sm text-foreground font-bold max-w-sm mb-2 uppercase'>
+          Your daily ink quota is exhausted.
+        </p>
+        <p className='font-sans text-xs text-neutral max-w-xs mb-4 uppercase font-semibold'>
+          Authenticate to get 15 daily sketches, or wait until 00:00 UTC for a fresh pot of ink.
+        </p>
+        <p className='font-mono text-[9px] text-neutral/50 uppercase mt-2 max-w-xs border border-foreground/10 px-2 py-1 bg-background'>
+          {error}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function ConnectionSevered({ error }: { error: string }) {
@@ -102,6 +136,8 @@ export default function CanvasPanelError({ error }: CanvasPanelErrorProps) {
       return <ConnectionSevered error={error} />;
     case 'DATA_CORRUPTION':
       return <DataCorruption error={error} />;
+    case 'INK_DEPLETED':
+      return <InkDepleted error={error} />;
     default:
       return <GenericError error={error} />;
   }

@@ -141,10 +141,27 @@ export default function SketchesPage() {
         throw new Error(result.error);
       }
 
-      // Successful deletion
-      queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
-      showToast('deleted', 'SKETCH SCRAPPED! Removed from sketchbook.', false, 2500);
+      // 1. Clear modal state instantly
       setSketchToDelete(null);
+
+      // 2. Optimistically update local query cache instantly to remove the deleted sketch family
+      queryClient.setQueryData<GetSketchesResponse>(
+        ['sketches', user?.id],
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            sketches: oldData.sketches.filter(
+              (s) => s.id !== sketchToDelete.rootId && s.parent_id !== sketchToDelete.rootId
+            ),
+          };
+        }
+      );
+
+      // 3. Invalidate query in background (no await)
+      queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
+
+      showToast('deleted', 'SKETCH SCRAPPED! Removed from sketchbook.', false, 2500);
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error
