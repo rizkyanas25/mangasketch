@@ -13,6 +13,7 @@ import {
 } from '@mangasketch/shared';
 import StyleSelector from './StyleSelector';
 import { MagicEdit } from 'pixelarticons/react';
+import { useUiStore } from '@/store/uiStore';
 
 interface GenerateFormProps {
   sketch?: Sketch | null;
@@ -40,13 +41,22 @@ export default function GenerateForm({
 }: GenerateFormProps) {
   const { user, session } = useAuth();
   const queryClient = useQueryClient();
+  const showToast = useUiStore((state) => state.showToast);
 
   // Fetch current daily quota status directly inside the form using Next.js Server Action
-  const { data: quota } = useQuery<GetQuotaResponse>({
+  const { data: quota, error: quotaError } = useQuery<GetQuotaResponse>({
     queryKey: ['quota', user?.id],
     queryFn: () => getQuotaAction(session?.access_token || undefined),
     refetchOnWindowFocus: true,
+    retry: 1,
   });
+
+  // Trigger error toast if fetching quota fails (e.g. server is offline)
+  useEffect(() => {
+    if (quotaError) {
+      showToast('error', quotaError.message);
+    }
+  }, [quotaError, showToast]);
 
   // Track isGenerating transition to invalidate quota query
   const wasGenerating = useRef(isGenerating);

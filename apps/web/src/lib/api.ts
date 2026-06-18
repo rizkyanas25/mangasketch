@@ -35,11 +35,18 @@ export async function apiFetch<T>(
     url += `?${searchParams.toString()}`;
   }
 
-  // Get current active session to inject JWT token automatically
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token;
+  // Get current active session to inject JWT token automatically (safely on client-side)
+  let token = undefined;
+  if (typeof window !== 'undefined') {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      token = session?.access_token;
+    } catch (err) {
+      console.warn('Failed to retrieve client session:', err);
+    }
+  }
 
   const requestHeaders = new Headers(headers);
   if (
@@ -52,10 +59,24 @@ export async function apiFetch<T>(
     requestHeaders.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(url, {
-    ...restOptions,
-    headers: requestHeaders,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      ...restOptions,
+      headers: requestHeaders,
+    });
+  } catch (err: unknown) {
+    const isOffline =
+      err instanceof Error &&
+      (err.message.toLowerCase().includes('fetch failed') ||
+        err.message.toLowerCase().includes('failed to fetch') ||
+        err.message.toLowerCase().includes('networkerror') ||
+        err.message.toLowerCase().includes('econnrefused'));
+    if (isOffline) {
+      throw new Error('CONNECTION ERROR: SERVER UNREACHABLE. PLEASE TRY AGAIN LATER.');
+    }
+    throw err;
+  }
 
   if (!response.ok) {
     let errorData: { message?: string; code?: ApiErrorCode } = {};

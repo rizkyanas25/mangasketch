@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/providers/AuthProvider';
-import { deleteSketchAction } from '../actions';
+import { deleteSketchAction, getSketchesAction } from '../actions';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 import { MagicEdit } from 'pixelarticons/react';
 import CanvasPanelError from '@/components/CanvasPanelError';
@@ -13,8 +13,6 @@ import SketchCard from '@/components/SketchCard';
 import SketchSkeletonCard from '@/components/SketchSkeletonCard';
 import { Sketch, GetSketchesResponse } from '@mangasketch/shared';
 import { useUiStore } from '@/store/uiStore';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface GroupedSketch {
   rootId: string;
@@ -110,15 +108,7 @@ export default function SketchesPage() {
     queryKey: ['sketches', user?.id],
     queryFn: async (): Promise<GetSketchesResponse> => {
       if (!session?.access_token) return { sketches: [] };
-      const response = await fetch(`${API_BASE_URL}/api/sketches`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to load sketches.');
-      }
-      return response.json() as Promise<GetSketchesResponse>;
+      return getSketchesAction(session.access_token);
     },
     enabled: !!session?.access_token,
   });

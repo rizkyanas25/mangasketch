@@ -4,9 +4,10 @@ import {
   GenerateSketchResponse,
   DeleteSketchResponse,
   GetQuotaResponse,
+  GetSketchesResponse,
+  GetSketchDetailResponse,
 } from '@mangasketch/shared';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { apiFetch } from '@/lib/api';
 
 export interface ActionState {
   data: GenerateSketchResponse | null;
@@ -33,14 +34,12 @@ export async function generateSketchAction(
   }
 
   try {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/sketches`, {
+    const data = await apiFetch<GenerateSketchResponse>('/api/sketches', {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -54,16 +53,6 @@ export async function generateSketchAction(
       }),
     });
 
-    if (!response.ok) {
-      let errorMsg = 'Failed to generate sketch.';
-      try {
-        const errorData = await response.json();
-        errorMsg = errorData.message || errorMsg;
-      } catch {}
-      return { data: null, error: errorMsg };
-    }
-
-    const data = (await response.json()) as GenerateSketchResponse;
     return { data, error: null };
   } catch (err: unknown) {
     const errorMsg =
@@ -77,23 +66,13 @@ export async function deleteSketchAction(
   token: string,
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/sketches/${sketchId}`, {
+    await apiFetch<DeleteSketchResponse>(`/api/sketches/${sketchId}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      let errorMsg = 'Failed to erase sketch.';
-      try {
-        const errorData = await response.json();
-        errorMsg = errorData.message || errorMsg;
-      } catch {}
-      return { success: false, error: errorMsg };
-    }
-
-    (await response.json()) as DeleteSketchResponse;
     return { success: true, error: null };
   } catch (err: unknown) {
     const errorMsg =
@@ -105,31 +84,43 @@ export async function deleteSketchAction(
 export async function getQuotaAction(
   token?: string,
 ): Promise<GetQuotaResponse> {
-  try {
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${API_BASE_URL}/api/sketches/quota`, {
-      method: 'GET',
-      headers,
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      let errorMsg = 'Failed to retrieve ink quota.';
-      try {
-        const errorData = await response.json();
-        errorMsg = errorData.message || errorMsg;
-      } catch {}
-      throw new Error(errorMsg);
-    }
-
-    return (await response.json()) as GetQuotaResponse;
-  } catch (err: unknown) {
-    const errorMsg =
-      err instanceof Error ? err.message : 'Failed to retrieve ink quota.';
-    throw new Error(errorMsg);
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
+
+  return apiFetch<GetQuotaResponse>('/api/sketches/quota', {
+    method: 'GET',
+    headers,
+    cache: 'no-store',
+  });
+}
+
+export async function getSketchesAction(
+  token?: string,
+): Promise<GetSketchesResponse> {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return apiFetch<GetSketchesResponse>('/api/sketches', {
+    method: 'GET',
+    headers,
+  });
+}
+
+export async function getSketchDetailAction(
+  sketchId: string,
+  token?: string,
+): Promise<GetSketchDetailResponse> {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return apiFetch<GetSketchDetailResponse>(`/api/sketches/${sketchId}`, {
+    method: 'GET',
+    headers,
+  });
 }

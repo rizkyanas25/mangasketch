@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ToastType = 'recovered' | 'deleted' | 'success';
+export type ToastType = 'recovered' | 'deleted' | 'success' | 'error';
 
 export interface ToastState {
   type: ToastType;

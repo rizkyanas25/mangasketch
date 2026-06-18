@@ -3,14 +3,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
-
 import { MagicEdit } from 'pixelarticons/react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { apiFetch } from '@/lib/api';
+import { useUiStore } from '@/store/uiStore';
+import { GenerateSketchResponse } from '@mangasketch/shared';
 
 export default function AuthCallback() {
   const { user, session, loading } = useAuth();
   const router = useRouter();
+  const showToast = useUiStore((state) => state.showToast);
   const [status, setStatus] = useState(
     'Stabilizing ink flow. Authenticating mangaka.',
   );
@@ -41,16 +42,9 @@ export default function AuthCallback() {
 
       try {
         const pendingData = JSON.parse(pendingDataStr);
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
 
-        const response = await fetch(`${API_BASE_URL}/api/sketches`, {
+        await apiFetch<GenerateSketchResponse>('/api/sketches', {
           method: 'POST',
-          headers,
           body: JSON.stringify({
             prompt: pendingData.prompt,
             mangaStyle: pendingData.mangaStyle,
@@ -62,18 +56,21 @@ export default function AuthCallback() {
           }),
         });
 
-        if (response.ok) {
-          localStorage.removeItem('mangasketch_pending_upload');
-          uploadSucceeded.current = true;
-          router.push('/sketches?toast=recovered');
-        } else {
-          console.error('Failed to recover sketch:', await response.text());
-          localStorage.removeItem('mangasketch_pending_upload');
-          router.push('/');
-        }
-      } catch (err) {
-        console.error('Error recovering sketch:', err);
         localStorage.removeItem('mangasketch_pending_upload');
+        uploadSucceeded.current = true;
+        router.push('/sketches?toast=recovered');
+      } catch (err: unknown) {
+        console.error('Error recovering sketch:', err);
+        const errMsg =
+          err instanceof Error ? err.message : 'Failed to recover sketch.';
+
+        // Safeguard: do not delete the pending sketch if it was a connection error, so they can try again later.
+        const isOffline = errMsg.includes('SERVER UNREACHABLE');
+        if (!isOffline) {
+          localStorage.removeItem('mangasketch_pending_upload');
+        }
+
+        showToast('error', errMsg);
         router.push('/');
       } finally {
         setSubmitting(false);
@@ -81,7 +78,7 @@ export default function AuthCallback() {
     };
 
     recoverSketch();
-  }, [loading, user, session, router, submitting]);
+  }, [loading, user, session, router, submitting, showToast]);
 
   return (
     <div className='min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center p-6 text-foreground'>
