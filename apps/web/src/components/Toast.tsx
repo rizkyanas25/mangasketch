@@ -14,7 +14,7 @@ export default function Toast() {
   return (
     <div
       onClick={hideToast}
-      className={`fixed bottom-6 right-6 z-50 border-4 border-foreground bg-background p-4 neo-shadow-sm flex items-center gap-3 transition-all duration-300 ease-out transform cursor-pointer select-none ${
+      className={`fixed bottom-6 left-6 right-6 sm:left-auto sm:right-6 z-50 border-4 border-foreground bg-background p-4 neo-shadow-sm flex items-center gap-3 transition-all duration-300 ease-out transform cursor-pointer select-none max-w-[calc(100vw-3rem)] sm:max-w-md ${
         toast.visible ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'
       }`}
     >

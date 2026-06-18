@@ -38,6 +38,14 @@ export default function SketchDetailPage() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to canvas when re-generation starts (centered in viewport)
+  useEffect(() => {
+    if (isGenerating && canvasRef.current) {
+      canvasRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isGenerating]);
 
   const [sketchToDelete, setSketchToDelete] = useState<{
     sketch: Sketch;
@@ -359,7 +367,10 @@ export default function SketchDetailPage() {
       {/* 2. Workspace Side-by-Side Grid */}
       <div className='flex flex-col lg:flex-row gap-8'>
         {/* Left Column: Canvas View */}
-        <section className='lg:flex-[7] flex flex-col bg-background border-4 border-foreground neo-shadow aspect-[3/4] p-4'>
+        <section
+          ref={canvasRef}
+          className='lg:flex-[7] flex flex-col bg-background border-4 border-foreground neo-shadow aspect-[3/4] p-4'
+        >
           <MangaCanvas
             imageUrl={activeSketch?.image_url}
             isPending={isPageLoading || isGenerating}

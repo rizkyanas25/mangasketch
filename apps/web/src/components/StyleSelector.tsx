@@ -21,7 +21,7 @@ const DRAWING_STYLE_IMAGES: Record<DrawingStyle, string> = {
   ROUGH_SKETCH: '/assets/styles/pill-rough.png',
   CLEAN_LINE_ART: '/assets/styles/pill-clean.png',
   INKED_MANGA: '/assets/styles/pill-inked.png',
-  DETAILED_ILLUSTRATION: '/assets/styles/pill-detailed.png',
+  ILLUSTRATION: '/assets/styles/pill-detailed.png',
 };
 
 interface StyleSelectorProps {
@@ -97,7 +97,7 @@ export default function StyleSelector({
                     src={MANGA_STYLE_IMAGES[style]}
                     alt=''
                     aria-hidden='true'
-                    className={`absolute right-[-4px] bottom-[-4px] w-[70px] h-[70px] object-contain pointer-events-none z-0 pill-watermark ${
+                    className={`absolute right-[-4px] top-0 h-full w-auto object-contain pointer-events-none z-0 pill-watermark ${
                       isSelected ? 'pill-watermark-selected' : ''
                     }`}
                   />
@@ -139,7 +139,7 @@ export default function StyleSelector({
                     src={DRAWING_STYLE_IMAGES[style]}
                     alt=''
                     aria-hidden='true'
-                    className={`absolute right-[-4px] bottom-[-4px] w-[70px] h-[70px] object-contain pointer-events-none z-0 pill-watermark ${
+                    className={`absolute right-[-4px] top-0 h-full w-auto object-contain pointer-events-none z-0 pill-watermark ${
                       isSelected ? 'pill-watermark-selected' : ''
                     }`}
                   />
@@ -151,10 +151,10 @@ export default function StyleSelector({
       </div>
 
       {/* Right: Hanko Watermark Section */}
-      <div className='border-2 border-foreground p-4 bg-background flex-1'>
-        <div className='flex justify-between h-full'>
+      <div className='border-2 border-foreground p-3 sm:p-4 bg-background flex-1'>
+        <div className='grid grid-cols-2 gap-2 sm:flex sm:justify-between sm:h-full'>
           {/* Left Column: Stamp Initials (Top) + Live Preview (Bottom) */}
-          <div className='flex flex-col gap-3'>
+          <div className='flex flex-col w-full sm:w-auto h-full gap-2 sm:gap-3'>
             {/* Stamp Initials */}
             <div className='flex flex-col gap-1.5'>
               <label className='font-mono text-[10px] font-bold uppercase tracking-wider'>
@@ -166,29 +166,29 @@ export default function StyleSelector({
                 onChange={handleWatermarkTextChange}
                 disabled={disabled}
                 placeholder='Your initial'
-                className={`p-2 h-10 border-2 border-foreground bg-background text-foreground font-display text-xs tracking-wider uppercase focus:outline-none focus:ring-1 focus:ring-foreground rounded-none w-full ${
+                className={`p-2 h-10 border-2 border-foreground bg-background text-foreground font-display text-xs tracking-wider uppercase focus:outline-none focus:ring-1 focus:ring-foreground rounded-none w-full sm:w-32 ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />
             </div>
 
             {/* Live Preview */}
-            <div className='flex flex-col gap-1.5 w-fit'>
-              <label className='font-mono text-[10px] font-bold uppercase tracking-wider text-neutral'>
+            <div className='flex flex-col gap-1.5 flex-1 min-h-0'>
+              <label className='font-mono text-[10px] font-bold uppercase tracking-wider'>
                 PREVIEW
               </label>
-              <div className='border-2 border-foreground border-dashed p-2 bg-neutral-light/5 flex items-center justify-center'>
-                <HankoStamp text={watermarkText} className='w-24 h-24' />
+              <div className='border-2 border-foreground border-dashed p-1.5 bg-neutral-light/5 flex items-center justify-center flex-1 min-h-0 w-full sm:flex-none sm:w-auto sm:h-auto sm:p-2'>
+                <HankoStamp text={watermarkText} className='w-full h-full max-w-[64px] max-h-[64px] sm:w-24 sm:h-24' />
               </div>
             </div>
           </div>
 
-          {/* Right Column: Stamp Placement 2x2 Grid — height matches left column, keeps 3:4 ratio */}
-          <div className='flex flex-col gap-1.5 items-end self-stretch'>
-            <label className='font-mono text-[10px] font-bold uppercase tracking-wider text-left'>
+          {/* Right Column: Stamp Placement 2x2 Grid — height matches left column on desktop, keeps 3:4 ratio */}
+          <div className='flex flex-col gap-1.5 items-start sm:items-end w-full sm:w-auto'>
+            <label className='font-mono text-[10px] font-bold uppercase tracking-wider text-left sm:text-right'>
               POSITION
             </label>
-            <div className='grid grid-cols-2 gap-1 border-2 border-foreground p-1 bg-neutral-light/5 flex-1 aspect-[3/4] w-auto'>
+            <div className='grid grid-cols-2 gap-1 border-2 border-foreground p-1 bg-neutral-light/5 aspect-[3/4] w-full h-auto sm:w-auto sm:h-auto sm:flex-1'>
               {WATERMARK_POSITIONS.map((pos) => {
                 const isActive = watermarkPosition === pos;
 

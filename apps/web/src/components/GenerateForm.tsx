@@ -170,9 +170,9 @@ export default function GenerateForm({
       {/* Quota Indicator */}
       {quota && (
         <div className="flex items-center gap-2 font-mono text-xs border-2 border-foreground p-3 bg-background relative group/quota cursor-help">
-          <span className="font-bold flex-1 flex justify-between items-center select-none">
+          <span className="font-bold flex-1 flex flex-wrap justify-between items-center gap-x-2 gap-y-1 select-none">
             <span>REMAINING INK:</span>
-            <span className="text-destructive font-mono font-bold tracking-widest relative">
+            <span className="text-destructive font-mono font-bold tracking-wider sm:tracking-widest relative">
               {quota.remaining} / {quota.limit} SKETCHES
               {/* Tooltip */}
               <span className="absolute bottom-full mb-2 right-0 hidden group-hover/quota:block bg-background border-2 border-foreground p-2 text-[10px] text-foreground w-56 neo-shadow-sm z-30 normal-case font-medium font-mono text-left">

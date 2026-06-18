@@ -8,7 +8,7 @@ export const DRAWING_STYLES = [
   'ROUGH_SKETCH',
   'CLEAN_LINE_ART',
   'INKED_MANGA',
-  'DETAILED_ILLUSTRATION'
+  'ILLUSTRATION'
 ] as const;
 export type DrawingStyle = typeof DRAWING_STYLES[number];
 
