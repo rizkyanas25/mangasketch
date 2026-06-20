@@ -176,7 +176,20 @@ describe('Sketches API Routes', () => {
       });
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toContain('letters, numbers, and spaces');
+      expect(res.body.message).toContain('letters and numbers');
+    });
+
+    it('should return 400 if watermark text contains spaces', async () => {
+      const res = await request(app).post('/api/sketches').send({
+        prompt: 'cute drawing',
+        mangaStyle: 'SHONEN',
+        drawingStyle: 'INKED_MANGA',
+        watermarkText: 'A B',
+        watermarkPosition: 'BOTTOM_RIGHT',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('letters and numbers');
     });
 
     it('should generate sketch and return 200 with base64 data for anonymous request', async () => {

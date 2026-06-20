@@ -276,6 +276,14 @@ This section documents the actual engineering decisions made during development.
 
 ---
 
+### 18. Hanko Stamp Font Embedding & Initials Validation
+
+- **Original Plan:** Rely on system-level font installations (e.g., expecting *Noto Sans JP* and *Impact* to be pre-installed on the host operating system) and allow general letters and spaces for watermark initials.
+- **Actual Decision:** I implemented inline font embedding by subsetting the original font files using `fontTools` and injecting the resulting Base64 WOFF2 compressed strings directly into a `<defs><style>` block in the watermark SVG template. I separated the Base64 constants into dedicated modules (`notoSansJP.ts` and `impact.ts`) to maintain clean rendering code, and tightened input validation: the frontend strips out spaces and illegal characters in real-time, while the backend ensures the input strictly contains only alphanumeric characters.
+- **Why:** During backend deployment, I encountered an issue where fonts failed to load, causing the Hanko stamp text to render with broken fallback styling. After investigating, I discovered that headless Linux container environments (such as Railway or Vercel) do not have these specific font packages installed by default. By compressing the fonts from over 5MB down to less than 12KB and embedding them as Base64 WOFF2, the Hanko stamp now renders identically and consistently across any server setup. Tightening the initials validation (disallowing spaces) further guarantees that no unsupported characters can bypass the API and break the stamp's visual integrity.
+
+---
+
 ## Actual App Journeys & Operations (High-Fidelity Flows)
 
 These diagrams visualize the finalized actual architectures and request lifecycles implemented in the production codebase.

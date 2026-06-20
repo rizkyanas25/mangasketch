@@ -54,7 +54,7 @@ export default function StyleSelector({
   const handleWatermarkTextChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+    const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (val.length <= 4) {
       setWatermarkText(val);
     }

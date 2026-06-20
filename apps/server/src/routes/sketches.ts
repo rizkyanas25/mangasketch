@@ -113,13 +113,13 @@ router.post('/', optionalAuth, async (req: AuthenticatedRequest, res) => {
             message: `Watermark name is too long. Max ${MAX_WATERMARK_LENGTH} characters.`,
           });
         }
-        // alphanumeric and space only to prevent html svg injection
-        const alphanumericRegex = /^[a-zA-Z0-9 ]+$/;
+        // alphanumeric only to prevent html svg injection
+        const alphanumericRegex = /^[a-zA-Z0-9]+$/;
         if (!alphanumericRegex.test(trimmed)) {
           return res.status(400).json({
             code: 'UNKNOWN_ERROR',
             message:
-              'Watermark name can only contain letters, numbers, and spaces.',
+              'Watermark name can only contain letters and numbers.',
           });
         }
       }

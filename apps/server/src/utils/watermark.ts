@@ -1,5 +1,7 @@
 import sharp from 'sharp';
 import { WatermarkPosition } from '@mangasketch/shared';
+import { NOTO_SANS_JP_SUBSET_BASE64 } from './fonts/notoSansJP';
+import { IMPACT_SUBSET_BASE64 } from './fonts/impact';
 
 /**
  * Dynamically generates the SVG string for the Hanko Stamp watermark overlay.
@@ -106,6 +108,20 @@ export function generateWatermarkSvg(userName: string | undefined, position: Wat
 
   return `
     <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <style>
+          @font-face {
+            font-family: 'Noto Sans JP';
+            src: url('data:font/woff2;charset=utf-8;base64,${NOTO_SANS_JP_SUBSET_BASE64}') format('woff2');
+            font-weight: 900;
+          }
+          @font-face {
+            font-family: 'Impact';
+            src: url('data:font/woff2;charset=utf-8;base64,${IMPACT_SUBSET_BASE64}') format('woff2');
+            font-weight: bold;
+          }
+        </style>
+      </defs>
       <!-- 1. White Solid background to cover/mask AI signature underneath -->
       <circle cx="${cx}" cy="${cy}" r="42" fill="${circleFill}" />
       
