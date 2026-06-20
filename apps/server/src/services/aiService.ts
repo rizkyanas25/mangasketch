@@ -27,7 +27,7 @@ export class AiService {
     const encodedPrompt = encodeURIComponent(wrappedPrompt);
     const width = 768; // 3:4 portrait aspect ratio
     const height = 1024;
-    const model = 'flux';
+    const model = 'zimage';
 
     const url = `https://gen.pollinations.ai/image/${encodedPrompt}?width=${width}&height=${height}&model=${model}&seed=${finalSeed}&key=${POLLINATIONS_API_KEY}`;
 

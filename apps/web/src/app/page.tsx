@@ -31,9 +31,14 @@ export default function Home() {
     error: null,
   });
 
+  const wasPending = useRef(isPending);
   useEffect(() => {
     setIsGenerating(isPending);
-  }, [isPending, setIsGenerating]);
+    if (wasPending.current && !isPending) {
+      queryClient.invalidateQueries({ queryKey: ['quota'] });
+    }
+    wasPending.current = isPending;
+  }, [isPending, setIsGenerating, queryClient]);
 
   // Trigger global success toast when sketch is successfully generated (only for logged-in/auth users)
   useEffect(() => {

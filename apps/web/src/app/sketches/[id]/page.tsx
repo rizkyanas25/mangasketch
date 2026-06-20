@@ -194,13 +194,18 @@ export default function SketchDetailPage() {
 
       const newId = response.data.id;
 
-      // Settle state, navigate, and invalidate cache as a single React transition
+      // Invalidate queries in the background (outside transition to prevent blocking)
+      queryClient.invalidateQueries({
+        queryKey: ['sketch-detail', familyId, user?.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['quota'],
+      });
+
+      // Settle state and navigate as a single React transition
       startTransition(() => {
         setIsGenerating(false);
         router.replace(`/sketches/${newId}`, { scroll: false });
-        queryClient.invalidateQueries({
-          queryKey: ['sketch-detail', familyId, user?.id],
-        });
       });
     } catch (err) {
       console.error('Re-sketch error:', err);
@@ -208,6 +213,9 @@ export default function SketchDetailPage() {
         err instanceof Error ? err.message : 'An unexpected error occurred.';
       setGenerationError(errMsg);
       setIsGenerating(false);
+      queryClient.invalidateQueries({
+        queryKey: ['quota'],
+      });
     }
   };
 
