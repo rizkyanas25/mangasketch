@@ -21,7 +21,6 @@ MangaSketch is built specifically for **mangakas (manga artists) and concept des
 ## 2. App Journey (Data & Request Flow)
 
 The diagram below illustrates our initial planning of how a user's prompt travels from the browser, through the Express backend, to the AI API, and back as an image:
-
 ```
 User Browser                  Express Backend                AI API & Supabase
      │                               │                                 │
@@ -44,7 +43,6 @@ User Browser                  Express Backend                AI API & Supabase
   - Logged: Saved ✓                                             - Auth: Saved
   - Anonymous: Login CTA                                        - Guest: Transient
 ```
-
 ---
 
 ## 3. Tech Stack Justification
@@ -237,89 +235,53 @@ These diagrams visualize the finalized actual architectures and request lifecycl
 ### A. Actual Generation Journey (POST /api/sketches)
 
 This flowchart illustrates the end-to-end request loop for generating a new panel, including the backend sharp processing pipeline and the localStorage guest cache recovery flow:
-
 ```
 User Browser                  Express Backend                Supabase Storage / DB
      │                               │                                 │
      ├── 1. POST /api/sketches ──────┼────────────────────────────────>│ [Verify Auth]
-     │   - prompt, styles, seed      │                                 │ (optional)
-     │                               ├── 2. Check Layer 1 Safety (Blocklist)
-     │                               │
-     │                               ├── 3. Build & Wrap Prompt (B&W instructions)
-     │                               │
-     │                               ├── 4. Request to Pollinations.ai (Model zimage)
-     │                               │      Returns Raw Binary PNG Buffer
-     │                               │
-     │                               ├── 5. Post-Processing Pipeline (sharp):
-     │                               │      - Force Grayscale Conversion (anti-leakage)
-     │                               │      - Dynamic Hanko SVG stamp overlay
-     │                               │
-     │     ┌─────────────────────────┴─────────────────────────┐
+     │   - prompt, styles, seed      ├── 2. Check Layer 1 Safety       │ (optional)
+     │                               ├── 3. Build & Wrap Prompt (B&W)  │
+     │                               ├── 4. Request to Pollinations.ai │
+     │                               │      (Returns Raw PNG Buffer)   │
+     │                               ├── 5. Post-Processing (sharp):   │
+     │                               │      - Force Grayscale & Hanko  │
+     │     ┌─────────────────────────┴─────────────────────────┐       │
      │     ▼ [Authenticated?]                                  ▼ [Guest/Anonymous?]
-     │     │                                                   │
-     │     ├── 6. Persist sketch:                              ├── 6. Returns base64
-     │     │   - Upload PNG to Storage bucket                  │      Data URL directly
-     │     │   - Save PostgreSQL record (parent/child)         │
-     │     │                                                   ├── 7. Cache metadata & base64
-     │     ├── 7. Returns saved payload                        │      in localStorage
-     │     │                                                   │      (mangasketch_pending_upload)
-     ▼     ▼                                                   ▼
-[MangaCanvas]                                             [Stored in Browser Memory]
-           │                                                   │
-           │                                                   ├── 8. User Login (Google OAuth)
-           │                                                   │      Redirect Callback
-           │                                                   │
-           │                                                   └── 9. POST /api/sketches (base64)
-           │                                                          Directly uploaded to Storage
-           │                                                          & saved to PostgreSQL
-           ▼                                                   ▼
-  [Sketch Secured! ✓]                                 [Sketchbook Recovered! ✓]
+     │     ├── 6. Persist sketch:                              ├── 6. Return base64 URL
+     │     │   - Upload to Storage ────────────────────────────┼──────>│ [Save Asset]
+     │     │   - Save PostgreSQL record ───────────────────────┼──────>│ [Save DB Record]
+     │     └── 7. Return saved payload                         ├── 7. Cache in localStorage
+     ▼                                                         ▼
+[MangaCanvas]                                             [Browser Memory Cache]
+     │                                                         ├── 8. User Login (OAuth)
+     │                                                         └── 9. POST /api/sketches (base64)
+     │                                                                Uploads & saves to DB
+     ▼                                                         ▼
+[Sketch Secured! ✓]                                       [Sketchbook Recovered! ✓]
 ```
-
 ### B. Actual Deletion & Cleanup Journey (DELETE /api/sketches/:id)
 
 This flowchart illustrates how a sketch or variation is permanently purged from the workspace. It details the cascading database purge and the bulk file deletion from cloud storage:
-
 ```
 User Browser                  Express Backend                Supabase Storage / DB
      │                               │                                 │
-     ├── 1. DELETE /api/sketches/:id ┼────────────────────────────────>│ [Verify Auth & Ownership]
-     │   - Bearer JWT Token          │                                 │
-     │                               ├── 2. Check UUID ID Format       │
-     │                               │
-     │                               ├── 3. Query image metadata:      │
-     │                               │      Retrieve image URL for     │
-     │                               │      target sketch & all sibling│
-     │                               │      versions.                  │
-     │                               │                                 │
+     ├── 1. DELETE /api/sketches/:id>│                                 │
+     │   - Bearer JWT Token          ├── 2. Check UUID ID Format       │
+     │                               ├── 3. Query image metadata: ────>│ [Fetch URLs]
+     │                               │      Retrieve target URLs &     │
+     │                               │      all sibling versions       │
      │                               ├── 4. Send DB Delete Query ─────>│ [PostgreSQL Engine]
-     │                               │                                 │ Delete main sketch record.
-     │                               │                                 │ (ON DELETE CASCADE
-     │                               │                                 │  automatically purges all
-     │                               │                                 │  child version records).
-     │                               │                                 │
-     │                               ├── 5. Parse & Extract Filepath:  │
-     │                               │      Extract clean storage path │
-     │                               │      from image URL             │
-     │                               │      (e.g., 'user-id/file.png') │
-     │                               │                                 │
-     │                               ├── 6. Bulk delete image files ──>│ [Supabase Storage Bucket]
-     │                               │      from Storage.              │ Purge all associated files
-     │                               │                                 │ in cloud storage.
-     │                               │                                 │
-     │     ┌─────────────────────────┴─────────────────────────┘
-     │     ▼
-     ├── 7. Returns 200 OK (success: true)
-     │
-     ├── 8. UI Handler:
-     │      - Close delete modal instantly.
-     │      - Show Snappy Toast (auto-hide 2.5s).
-     │      - Invalidate TanStack query cache in background (async).
-     │      - Redirect router to remaining version or to /sketches.
-     ▼
-[UI Updated Successfully]
+     │                               │      (Cascades to all versions) │ (ON DELETE CASCADE)
+     │                               ├── 5. Extract storage file paths │
+     │                               ├── 6. Bulk delete image files ──>│ [Supabase Storage]
+     │<── 7. Returns 200 OK (success)│                                 │ (Purge cloud files)
+     ├── 8. Snappy UI Handler:       │                                 │
+     │   - Close modal instantly     │                                 │
+     │   - Invalidate cache (async)  │                                 │
+     │   - Redirect to gallery       │                                 │
+     ▼                               ▼                                 ▼
+[UI Updated Successfully]     [Finished Request]               [Purged & Cleaned]
 ```
-
 ---
 
 ## Overly Developed & Polished Features
