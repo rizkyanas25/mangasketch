@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Expand, Download, Close } from 'pixelarticons/react';
 import CanvasPanelLoading from './CanvasPanelLoading';
 import CanvasPanelError from './CanvasPanelError';
+import { FadeInImage } from './FadeInImage';
 
 interface MangaCanvasProps {
   imageUrl?: string | null;
@@ -116,10 +117,10 @@ export default function MangaCanvas({
         <CanvasPanelError error={error} />
       ) : imageUrl ? (
         <div className='relative w-full h-full flex items-center justify-center group/canvas-img bg-background'>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <FadeInImage
             src={imageUrl}
             alt={prompt}
+            duration={300}
             className='w-full h-full object-contain select-none'
             onContextMenu={(e) => e.preventDefault()}
             draggable={false}
@@ -179,22 +180,35 @@ export default function MangaCanvas({
             onClick={() => setIsExpanded(false)}
           />
 
-          {/* Close Button in upper right corner of viewport */}
-          <button
-            type='button'
-            onClick={() => setIsExpanded(false)}
-            title='CLOSE'
-            className='absolute top-4 right-4 md:top-8 md:right-8 border-2 border-foreground bg-background text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer flex items-center justify-center z-20 neo-shadow-sm'
-          >
-            <Close className='w-5 h-5' />
-          </button>
+          {/* Action Buttons in upper right corner of viewport */}
+          <div className='absolute top-4 right-4 md:top-8 md:right-8 flex gap-2 z-20'>
+            {/* Download Button */}
+            <button
+              type='button'
+              onClick={handleDownload}
+              title='DOWNLOAD PANEL'
+              className='border-2 border-foreground bg-background text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer flex items-center justify-center neo-shadow-sm'
+            >
+              <Download className='w-5 h-5' />
+            </button>
+
+            {/* Close Button */}
+            <button
+              type='button'
+              onClick={() => setIsExpanded(false)}
+              title='CLOSE'
+              className='border-2 border-foreground bg-background text-foreground p-2 hover:bg-foreground hover:text-background transition-colors cursor-pointer flex items-center justify-center neo-shadow-sm'
+            >
+              <Close className='w-5 h-5' />
+            </button>
+          </div>
 
           {/* Image Container (centered, maximized, no card structure) */}
           <div className='relative max-w-full max-h-[90vh] flex items-center justify-center z-10 bg-background'>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <FadeInImage
               src={imageUrl}
               alt={prompt}
+              duration={300}
               className='max-w-[90vw] max-h-[90vh] object-contain border-4 border-foreground neo-shadow bg-background'
               onContextMenu={(e) => e.preventDefault()}
               draggable={false}

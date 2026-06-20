@@ -246,7 +246,9 @@ export default function GenerateForm({
           hasExistingImage &&
           !(isPageLoading || isGenerating) && (
             <span className='font-mono text-[9px] text-background/60 group-hover:text-foreground/60 tracking-wider lowercase normal-case select-none'>
-              (* starts a new sketch family in your sketchbook)
+              {user
+                ? '(* starts a new sketch family in your sketchbook)'
+                : '(* this will overwrite your last generated sketch)'}
             </span>
           )}
       </button>

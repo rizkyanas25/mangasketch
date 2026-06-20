@@ -9,6 +9,7 @@ import {
   WATERMARK_POSITIONS,
 } from '@mangasketch/shared';
 import { HankoStamp } from './HankoStamp';
+import { FadeInImage } from './FadeInImage';
 
 const MANGA_STYLE_IMAGES: Record<MangaStyle, string> = {
   SHONEN: '/assets/styles/pill-shonen.webp',
@@ -95,11 +96,11 @@ export default function StyleSelector({
                   }`}
                 >
                   <span className='relative z-10'>{style}</span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <FadeInImage
                     src={MANGA_STYLE_IMAGES[style]}
                     alt=''
                     aria-hidden='true'
+                    duration={300}
                     className={`absolute right-[-4px] top-0 h-full w-auto object-contain pointer-events-none z-0 pill-watermark ${
                       isSelected ? 'pill-watermark-selected' : ''
                     }`}
@@ -143,11 +144,11 @@ export default function StyleSelector({
                   <span className='relative z-10'>
                     {style.replace(/_/g, ' ')}
                   </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <FadeInImage
                     src={DRAWING_STYLE_IMAGES[style]}
                     alt=''
                     aria-hidden='true'
+                    duration={300}
                     className={`absolute right-[-4px] top-0 h-full w-auto object-contain pointer-events-none z-0 pill-watermark ${
                       isSelected ? 'pill-watermark-selected' : ''
                     }`}

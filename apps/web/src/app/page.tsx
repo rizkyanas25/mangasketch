@@ -16,6 +16,7 @@ import { useUiStore } from '@/store/uiStore';
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { HankoStamp } from '@/components/HankoStamp';
 import { LoginButton } from '@/components/LoginButton';
+import { FadeInImage } from '@/components/FadeInImage';
 
 export default function Home() {
   const { session, user, login } = useAuth();
@@ -112,10 +113,10 @@ export default function Home() {
         {/* Right: Large decorative tilted manga panel — overflows the section with strict 3:4 aspect ratio */}
         <div className='absolute -right-2 -mt-10 sm:-mt-0 md:-right-1 lg:right-6 lg:-mt-2 xl:-right-6 xl:-mt-0 top-1/2 -translate-y-1/2 w-[150px] sm:w-[170px] md:w-[220px] lg:w-[250px] xl:w-[220px] aspect-[3/4] z-20 pointer-events-none'>
           <div className='w-full h-full border-4 border-foreground neo-shadow-lg bg-background rotate-[4deg] relative overflow-hidden'>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <FadeInImage
               src='/assets/hero-panel.webp'
               alt='Manga Panel Concept'
+              duration={500}
               className='w-full h-full object-cover relative z-0'
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
