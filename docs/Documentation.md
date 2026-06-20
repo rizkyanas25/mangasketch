@@ -103,8 +103,6 @@ We sequenced the planned development into 5 distinct phases to prioritize workin
 
 This section documents the actual engineering decisions made during development.
 
----
-
 ### 1. Renaming & Consistent Wording Overhaul
 
 - **Original Plan (`thinking-old.md`):** Used terms like "gallery" (`/gallery`), "generations" (database table `generations`), "variants" and "drafts".
