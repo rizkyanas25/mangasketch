@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ToastType = 'recovered' | 'deleted' | 'success';
+export type ToastType = 'recovered' | 'deleted' | 'success' | 'error';
 
 export interface ToastState {
   type: ToastType;
@@ -12,7 +12,12 @@ interface UiState {
   isGenerating: boolean;
   setIsGenerating: (loading: boolean) => void;
   toast: ToastState | null;
-  showToast: (type: ToastType, message: string, triggerJiggle?: boolean, duration?: number) => void;
+  showToast: (
+    type: ToastType,
+    message: string,
+    triggerJiggle?: boolean,
+    duration?: number,
+  ) => void;
   hideToast: () => void;
   isJiggling: boolean;
   setIsJiggling: (jiggle: boolean) => void;

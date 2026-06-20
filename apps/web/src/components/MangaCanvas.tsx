@@ -43,24 +43,63 @@ export default function MangaCanvas({
     // Compile informatively structured filename
     const prefix = saved && sketchId ? sketchId.slice(0, 8) : 'anonymous';
     const mStyle = mangaStyle ? String(mangaStyle).toLowerCase() : 'manga';
-    const dStyle = drawingStyle ? String(drawingStyle).toLowerCase().replace(/_/g, '-') : 'style';
+    const dStyle = drawingStyle
+      ? String(drawingStyle).toLowerCase().replace(/_/g, '-')
+      : 'style';
     const seedVal = seed !== undefined ? seed : 'random';
     const fileName = `mangasketch-${prefix}-${mStyle}-${dStyle}-${seedVal}.png`;
 
     try {
       const res = await fetch(imageUrl);
       if (!res.ok) throw new Error('Fetch failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const webpBlob = await res.blob();
+
+      // Load into offscreen Image
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(webpBlob);
+      img.src = objectUrl;
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
+      // Create offscreen canvas matching exact dimensions
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Failed to get 2D context');
+
+      ctx.drawImage(img, 0, 0);
+
+      canvas.toBlob((pngBlob) => {
+        if (!pngBlob) {
+          console.warn('PNG conversion failed, downloading WebP fallback');
+          const a = document.createElement('a');
+          a.href = objectUrl;
+          a.download = fileName.replace('.png', '.webp');
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          return;
+        }
+        const pngUrl = URL.createObjectURL(pngBlob);
+        const a = document.createElement('a');
+        a.href = pngUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(pngUrl);
+        URL.revokeObjectURL(objectUrl);
+      }, 'image/png');
     } catch (err) {
-      console.warn('CORS or network error, falling back to open in new tab:', err);
+      console.warn(
+        'CORS or canvas error, falling back to open in new tab:',
+        err,
+      );
       window.open(imageUrl, '_blank');
     }
   };
@@ -76,7 +115,7 @@ export default function MangaCanvas({
       ) : error ? (
         <CanvasPanelError error={error} />
       ) : imageUrl ? (
-        <div className='relative w-full h-full flex items-center justify-center group/canvas-img'>
+        <div className='relative w-full h-full flex items-center justify-center group/canvas-img bg-background'>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
@@ -151,7 +190,7 @@ export default function MangaCanvas({
           </button>
 
           {/* Image Container (centered, maximized, no card structure) */}
-          <div className='relative max-w-full max-h-[90vh] flex items-center justify-center z-10'>
+          <div className='relative max-w-full max-h-[90vh] flex items-center justify-center z-10 bg-background'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}

@@ -8,7 +8,7 @@ export const DRAWING_STYLES = [
   'ROUGH_SKETCH',
   'CLEAN_LINE_ART',
   'INKED_MANGA',
-  'DETAILED_ILLUSTRATION'
+  'ILLUSTRATION'
 ] as const;
 export type DrawingStyle = typeof DRAWING_STYLES[number];
 
@@ -103,6 +103,13 @@ export interface GetSketchDetailResponse {
 export interface DeleteSketchResponse {
   success: boolean;
   message: string;
+}
+
+// --- 7. Quota System ---
+export interface GetQuotaResponse {
+  limit: number;
+  remaining: number;
+  resetTime: string;
 }
 
 

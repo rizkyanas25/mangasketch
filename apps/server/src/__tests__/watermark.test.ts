@@ -49,11 +49,11 @@ describe('Watermark Utility', () => {
           width: 768,
           height: 1024,
           channels: 3,
-          background: { r: 255, g: 255, b: 255 }
-        }
+          background: { r: 255, g: 255, b: 255 },
+        },
       })
-      .png()
-      .toBuffer();
+        .png()
+        .toBuffer();
 
       const result = await applyWatermark(dummyImage, 'NY', 'BOTTOM_RIGHT');
       expect(Buffer.isBuffer(result)).toBe(true);
@@ -63,7 +63,7 @@ describe('Watermark Utility', () => {
       const metadata = await sharp(result).metadata();
       expect(metadata.width).toBe(768);
       expect(metadata.height).toBe(1024);
-      expect(metadata.format).toBe('png');
+      expect(metadata.format).toBe('webp');
     });
   });
 });

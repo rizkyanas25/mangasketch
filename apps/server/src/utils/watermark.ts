@@ -151,5 +151,6 @@ export async function applyWatermark(
         left: 0
       }
     ])
+    .webp({ quality: 85 })
     .toBuffer();
 }

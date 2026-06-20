@@ -15,6 +15,7 @@ import MangaCanvas from '@/components/MangaCanvas';
 import { useUiStore } from '@/store/uiStore';
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { HankoStamp } from '@/components/HankoStamp';
+import { LoginButton } from '@/components/LoginButton';
 
 export default function Home() {
   const { session, user, login } = useAuth();
@@ -38,10 +39,10 @@ export default function Home() {
     }
   }, [state.data, user, showToast]);
 
-  // Auto-scroll to canvas on mobile when generation starts
+  // Auto-scroll to canvas when generation starts (centered in viewport)
   useEffect(() => {
     if (isPending && canvasRef.current) {
-      canvasRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      canvasRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [isPending]);
 
@@ -94,7 +95,7 @@ export default function Home() {
         {/* Speed lines for drama */}
         <div className='manga-speedlines absolute inset-0 pointer-events-none' />
 
-        <div className='relative z-10 text-center md:text-left max-w-3xl'>
+        <div className='relative z-10 text-left max-w-3xl pr-[95px] sm:pr-[150px] md:pr-0 md:max-w-[70%] lg:max-w-[72%] xl:max-w-3xl'>
           <h1 className='font-display text-4xl md:text-6xl tracking-wide uppercase mb-3 leading-[0.95]'>
             TURN YOUR MANGA IDEAS INTO{' '}
             <span className='bg-foreground text-background px-2 py-0.5 inline-block'>
@@ -109,11 +110,11 @@ export default function Home() {
         </div>
 
         {/* Right: Large decorative tilted manga panel — overflows the section with strict 3:4 aspect ratio */}
-        <div className='hidden md:block absolute -right-6 top-1/2 -translate-y-1/2 w-[220px] aspect-[3/4] z-20 pointer-events-none'>
+        <div className='absolute -right-2 -mt-10 sm:-mt-0 md:-right-1 lg:right-6 lg:-mt-2 xl:-right-6 xl:-mt-0 top-1/2 -translate-y-1/2 w-[150px] sm:w-[170px] md:w-[220px] lg:w-[250px] xl:w-[220px] aspect-[3/4] z-20 pointer-events-none'>
           <div className='w-full h-full border-4 border-foreground neo-shadow-lg bg-background rotate-[4deg] relative overflow-hidden'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src='/assets/hero-panel.png'
+              src='/assets/hero-panel.webp'
               alt='Manga Panel Concept'
               className='w-full h-full object-cover relative z-0'
               onError={(e) => {
@@ -121,7 +122,7 @@ export default function Home() {
               }}
             />
             {/* Tilted panel Hanko Stamp signature */}
-            <HankoStamp className='absolute bottom-3 right-3 w-10 h-10 z-20 opacity-95' />
+            <HankoStamp className='absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 md:bottom-2 md:right-2 lg:bottom-2.5 lg:right-2.5 xl:bottom-3 xl:right-3 w-4 h-4 sm:w-5 sm:h-5 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10 z-20 opacity-95' />
           </div>
         </div>
       </section>
@@ -130,7 +131,7 @@ export default function Home() {
       <div className='flex flex-col lg:flex-row gap-8'>
         {/* Left: Input Form Panel */}
         <GenerateForm
-          mode="create"
+          mode='create'
           isGenerating={isPending}
           hasExistingImage={!!state.data?.imageUrl}
           onSubmit={handleGenerateSubmit}
@@ -180,14 +181,7 @@ export default function Home() {
                 it forever.
               </p>
             </div>
-            <button
-              type='button'
-              onClick={() => login()}
-              className='font-display px-6 py-2 text-sm border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase flex-shrink-0 flex items-center gap-2'
-            >
-              <GoogleIcon className='w-5 h-5' />
-              LOGIN
-            </button>
+            <LoginButton />
           </div>
         </section>
       )}

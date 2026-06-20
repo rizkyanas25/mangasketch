@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { WarningDiamond } from 'pixelarticons/react';
+import { formatDate } from '@/lib/utils';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface DeleteConfirmationModalProps {
   mangaStyle: string;
   drawingStyle: string;
   prompt: string;
+  createdAt: string;
 }
 
 export default function DeleteConfirmationModal({
@@ -35,6 +37,7 @@ export default function DeleteConfirmationModal({
   mangaStyle,
   drawingStyle,
   prompt,
+  createdAt,
 }: DeleteConfirmationModalProps) {
   if (!isOpen) return null;
 
@@ -77,8 +80,11 @@ export default function DeleteConfirmationModal({
           {/* Right Column: Prompt + Metadata */}
           <div className='flex-1 flex flex-col justify-between overflow-hidden'>
             <div className='flex flex-col gap-1'>
-              <div className='font-mono text-[9px] font-bold text-neutral uppercase'>
-                {mangaStyle} • {drawingStyle.replace(/_/g, ' ')}
+              <div className='font-mono text-[9px] font-bold text-neutral uppercase flex items-center justify-between'>
+                <span>
+                  {mangaStyle} • {drawingStyle.replace(/_/g, ' ')}
+                </span>
+                <span>{createdAt ? formatDate(createdAt) : ''}</span>
               </div>
               <p className='font-sans text-[11px] font-medium text-foreground line-clamp-3 uppercase leading-normal mt-0.5'>
                 {prompt}

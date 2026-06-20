@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
-import { FileSharp, BookOpenSharp, Moon } from 'pixelarticons/react';
+import { FileSharp, BookOpenSharp, Moon, Notebook } from 'pixelarticons/react';
 import { useUiStore } from '@/store/uiStore';
 import { GoogleIcon } from '@/components/GoogleIcon';
 import { HankoStamp } from './HankoStamp';
+import { LoginButton } from './LoginButton';
 
 export default function Header() {
   const { user, loading, login, logout } = useAuth();
@@ -49,11 +50,12 @@ export default function Header() {
           <div className='absolute left-1/2 transform -translate-x-1/2 bottom-[-22px] z-30'>
             <Link
               href='/sketches'
-              className={`block font-display text-lg tracking-wider px-5 py-2 border-2 border-foreground bg-background text-foreground transition-all rotate-[-2.5deg] neo-shadow-sm hover:-translate-y-0.5 hover:neo-shadow active:translate-y-0 cursor-pointer uppercase ${
+              className={`block font-display text-lg tracking-wider px-3 sm:px-5 py-1.5 sm:py-2 border-2 border-foreground bg-background text-foreground transition-all rotate-[-2.5deg] neo-shadow-sm hover:-translate-y-0.5 hover:neo-shadow active:translate-y-0 cursor-pointer uppercase ${
                 isSketchesPage ? 'bg-screentone-dense' : 'hover:bg-screentone'
               } ${isJiggling ? 'animate-jiggle' : ''}`}
             >
-              MY SKETCHBOOK
+              <span className='hidden sm:inline'>MY SKETCHBOOK</span>
+              <Notebook className='inline sm:hidden w-5 h-5' />
             </Link>
           </div>
         )}
@@ -132,14 +134,7 @@ export default function Header() {
               )}
             </div>
           ) : (
-            <button
-              onClick={() => login()}
-              disabled={isGenerating}
-              className='font-display px-5 py-1.5 text-sm md:text-base border-2 border-foreground bg-foreground text-background hover:bg-background hover:text-foreground hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 neo-shadow-sm cursor-pointer transition-all uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-foreground disabled:hover:text-background disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:shadow-none flex items-center gap-2'
-            >
-              <GoogleIcon className='w-5 h-5' />
-              LOGIN
-            </button>
+            <LoginButton isOnHeader={true} disabled={isGenerating} />
           )}
         </div>
       </div>

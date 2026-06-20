@@ -10,7 +10,7 @@
 
 **Turn your manga ideas into visual concepts in seconds.**
 
-[Live Demo](#) • [System Design](./docs/THINKING.md)
+[Live Demo](#) • [Documentation](./docs/Documentation.md)
 
 </div>
 
@@ -57,9 +57,13 @@ To replicate the database and storage on your Supabase instance:
 
 - **AI Manga Sketch Generator**, generate manga-style artwork from text prompts
 - **Style Presets**, choose between Shonen, Seinen, Shojo, Dark Fantasy, Cyberpunk
-- **Personal Gallery**, save and browse all your generated sketches
+- **Personal Sketchbook**, save and browse all your generated sketches
 - **Re-generation**, pick any saved result, tweak the prompt, and generate a new version
 - **Version History**, track the evolution of your ideas across re-generations
+- **Retro Theme Switcher**, toggle between Light Ink, Tankobon (sepia paper), and Midnight Moon themes
+- **Hanko Stamp Watermark**, dynamically generated SVG red signature stamps applied by default
+- **Post-Auth Recovery**, guest sketch is automatically saved to the database post-login
+- **Brutalist Canvas Overlays & Anti-Save**, hover custom tooltips, fullscreen modal, and right-click safeguards
 - **Google Sign-In**, simple authentication to save your work
 - **Try Without Login**, anonymous users can generate up to 5 images per hour
 
@@ -70,7 +74,7 @@ To replicate the database and storage on your Supabase instance:
 | Layer | Technology | Why |
 |-------|-----------|-----|
 | **Frontend** | Next.js 15, TypeScript, Tailwind CSS | App Router, server components, fast DX |
-| **State Management** | TanStack Query | Loading/error states, caching, infinite scroll |
+| **State Management** | TanStack Query, Zustand | Loading/error states, caching, global UI store |
 | **Backend** | Node.js, Express, TypeScript | Lightweight, full control over API routing |
 | **Database** | Supabase PostgreSQL | Managed Postgres with built-in auth |
 | **Storage** | Supabase Storage | Image storage with CDN |
@@ -88,7 +92,10 @@ mangasketch/
 │   ├── web/            # Next.js frontend
 │   └── server/         # Express backend
 ├── docs/
-│   └── THINKING.md     # System design document
+│   ├── Documentation.md   # Technical & design documentation
+│   └── DESIGN_LANGUAGE.md # Visual guidelines and design system
+├── packages/
+│   └── shared/         # Shared workspace package (types & constants)
 ├── .env.example
 ├── package.json        # npm workspaces root
 └── README.md
@@ -101,7 +108,7 @@ mangasketch/
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | `POST` | `/api/sketches` | Optional | Generate manga sketch from prompt |
-| `GET` | `/api/sketches` | Required | List user's sketches (paginated) |
+| `GET` | `/api/sketches` | Required | List user's sketches |
 | `GET` | `/api/sketches/:id` | Required | Get single sketch detail & version history |
 | `DELETE` | `/api/sketches/:id` | Required | Delete a sketch |
 
@@ -135,9 +142,10 @@ See [.env.example](.env.example) for all required variables.
 
 ## 📖 Documentation
 
-For system design, tech stack decisions, and build process:
+For system design, technical decisions, visual design specs, and build process:
 
-**[📄 THINKING.md](./docs/THINKING.md)**
+* **[📄 Documentation.md](./docs/Documentation.md)** - Technical & system design documentation
+* **[🎨 DESIGN_LANGUAGE.md](./docs/DESIGN_LANGUAGE.md)** - Visual guidelines and retro design system
 
 ---
 

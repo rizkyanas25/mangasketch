@@ -26,7 +26,7 @@ const DRAWING_STYLE_PROMPTS: Record<DrawingStyle, string> = {
   ROUGH_SKETCH: 'rough concept draft, loose construction lines, graphite pencil sketch, pencil texture strokes, unfinished raw drawing',
   CLEAN_LINE_ART: 'clean digital line art, clean outlines, pure linework ink, crisp margins, minimal shading',
   INKED_MANGA: 'traditional inked manga page, G-pen nib strokes, rich black ink, high-contrast ink values, heavy black shadows, raw ink splatters',
-  DETAILED_ILLUSTRATION: 'highly detailed manga illustration, polished concept art, professional screentones, rich ink textures, masterwork presentation'
+  ILLUSTRATION: 'highly detailed manga illustration, polished concept art, professional screentones, rich ink textures, masterwork presentation'
 };
 
 // Layer 2: Safety Injector (built into prompt to steer AI model weights away from NSFW)
