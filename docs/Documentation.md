@@ -10,17 +10,18 @@ This document covers the complete system design, architecture, and technical dec
 
 ## 1. Niche Selection & Product Vision
 
-MangaSketch is built specifically for **mangakas (manga artists) and concept designers**. I chose manga as the niche because of my genuine passion and deep interest in manga, anime, and Japanese pop culture. This authentic connection inspired me to create a tool tailored precisely to the real-world workflow and aesthetic requirements of comic artists—ensuring the niche shapes the actual product design rather than just serving as a superficial label on top of a generic image generator.
+MangaSketch is built for **anyone who wants to easily generate manga sketch panels** and experience a creative process similar to a mangaka's real-world workflow. I chose manga as the niche because of my genuine passion and deep interest in manga, anime, and Japanese pop culture. This authentic connection inspired me to design a system that guides users through the typical drawing cycle. Users can experiment with versioning, different manga styles, and progressive drawing stages (from rough sketch and clean line art, to inked manga and full illustration). This ensures that the niche shapes the actual product design rather than just serving as a superficial label on top of a generic image generator.
 
 - **The Problem:** Generic AI generators output high-contrast color illustrations that look nothing like traditional comic ink. When creating manga storyboards, character designs, or backgrounds, artists need black-and-white drawings, ink outlines, screentone dots, and clean lines.
 - **The Solution:** MangaSketch wraps all user inputs in custom-tailored prompt engineering templates. It restricts output specifically to monochrome manga aesthetics, regardless of what the user types.
-- **The Vision:** An AI concept artist assistant. Instead of separate, disjointed generations, each storyboard frame or sketch can evolve into versions (iterations) while preserving composition and seeds.
+- **The Vision:** An accessible AI-powered manga storyboard sketchpad. It allows anyone, regardless of drawing skill, to easily build their own stories by evolving rough layouts into progressive versions (such as from rough sketch to full illustration) while maintaining consistent compositions and seeds.
 
 ---
 
 ## 2. App Journey (Data & Request Flow)
 
 The diagram below illustrates our initial planning of how a user's prompt travels from the browser, through the Express backend, to the AI API, and back as an image:
+
 ```
 User Browser                  Express Backend                AI API & Supabase
      │                               │                                 │
@@ -43,6 +44,7 @@ User Browser                  Express Backend                AI API & Supabase
   - Logged: Saved ✓                                             - Auth: Saved
   - Anonymous: Login CTA                                        - Guest: Transient
 ```
+
 ---
 
 ## 3. Tech Stack Justification
@@ -173,7 +175,7 @@ This section documents the actual engineering decisions made during development.
 
 - **Original Plan:** Standard HTML `<img>` elements.
 - **Actual Decision:** Disabled right-clicks (`onContextMenu={(e) => e.preventDefault()}`) and image dragging (`draggable={false}`) on all canvases, overlays, and sketchbook thumbnails.
-- **Why:** Protects platform artwork and simulates a premium environment. It encourages users to use the official "Download Panel" button, which applies the Hanko stamp watermark.
+- **Why:** Prevents accidental image dragging and encourages users to use the official 'Download Panel' button for the correct high-res output (though standard browser inspection bypasses still apply).
 
 ### 11. Unified Delete Confirmation Modal with Card Preview
 
@@ -235,6 +237,7 @@ These diagrams visualize the finalized actual architectures and request lifecycl
 ### A. Actual Generation Journey (POST /api/sketches)
 
 This flowchart illustrates the end-to-end request loop for generating a new panel, including the backend sharp processing pipeline and the localStorage guest cache recovery flow:
+
 ```
 User Browser                  Express Backend                Supabase Storage / DB
      │                               │                                 │
@@ -250,7 +253,7 @@ User Browser                  Express Backend                Supabase Storage / 
      │     ├── 6. Persist sketch:                              ├── 6. Return base64 URL
      │     │   - Upload to Storage ────────────────────────────┼──────>│ [Save Asset]
      │     │   - Save PostgreSQL record ───────────────────────┼──────>│ [Save DB Record]
-     │     └── 7. Return saved payload                         ├── 7. Cache in localStorage
+     │<────┘   7. Return saved payload                         ├── 7. Cache in localStorage
      ▼                                                         ▼
 [MangaCanvas]                                             [Browser Memory Cache]
      │                                                         ├── 8. User Login (OAuth)
@@ -259,9 +262,11 @@ User Browser                  Express Backend                Supabase Storage / 
      ▼                                                         ▼
 [Sketch Secured! ✓]                                       [Sketchbook Recovered! ✓]
 ```
+
 ### B. Actual Deletion & Cleanup Journey (DELETE /api/sketches/:id)
 
 This flowchart illustrates how a sketch or variation is permanently purged from the workspace. It details the cascading database purge and the bulk file deletion from cloud storage:
+
 ```
 User Browser                  Express Backend                Supabase Storage / DB
      │                               │                                 │
@@ -282,13 +287,14 @@ User Browser                  Express Backend                Supabase Storage / 
      ▼                               ▼                                 ▼
 [UI Updated Successfully]     [Finished Request]               [Purged & Cleaned]
 ```
+
 ---
 
-## Overly Developed & Polished Features
+## Extra Features & UX Enhancements
 
-The assignment brief says this project should take 7 to 8 hours of focused work. But since I have a 7-day deadline, I choose to spend a few hours each day to chip away at it according to my initial plan, plus making some adjustments along the way. I really fall in love with the manga niche and this project, so I decided to build it like a real product with high attention to product flow, UI, and UX polish.
+Although the assignment brief suggests that this project should take 7 to 8 hours of focused work, I utilized the 7-day deadline to work on it systematically, dedicating a few hours each day to follow my initial plan and adjust features along the way. Driven by my passion for the manga niche, I chose to build MangaSketch like a real-world product. Given its unique visual identity, I invested extra effort into the product flow, UI styling, and overall UX polish to simulate a production-ready application.
 
-On the backend side, I keep it as simple and minimal as possible because I am a frontend-heavy fullstack engineer. But for the product experience and UI/UX, I go far beyond the requirements to make this a stellar piece in my personal portfolio.
+As a frontend-focused fullstack engineer, I designed the backend to be simple and lightweight, allowing me to concentrate the core of my development effort on delivering a highly polished, responsive UI and a seamless user experience (UX) on the frontend.
 
 Here are the features I built that are not in the requirements:
 
@@ -326,7 +332,7 @@ Here are the features I built that are not in the requirements:
 
 ### 9. Fully Automated Backend Test Suite (Vitest & Supertest) with Concurrency and Rate Limit Validation
 
-- **Why built:** The assignment specifies that the app must work correctly with multiple users generating at the same time and handle complex "messy" cases like concurrent load and rate limits. Rather than relying on manual browser clicking to guess if the concurrency works, I wrote a comprehensive automated testing suite (comprising 29 test cases) using **Vitest** and **Supertest** to mathematically prove the backend's robustness. The test suite mocks out slow network boundaries (like Pollinations.ai and Supabase Auth) to execute instantly, and asserts:
+- **Why built:** The assignment specifies that the app must work correctly with multiple users generating at the same time and handle complex "messy" cases like concurrent load and rate limits. Rather than relying on manual browser clicking to guess if the concurrency works, I wrote a comprehensive automated testing suite (comprising 29 test cases) using **Vitest** and **Supertest** to validate the backend under simulated conditions. The test suite mocks out slow network boundaries (like Pollinations.ai and Supabase Auth) to execute instantly, and asserts:
   - **Thread-Safety & Concurrent Load**: Verifies that when multiple parallel/concurrent requests are fired, the server handles state changes and database actions safely without race conditions or memory leaks.
   - **Quota Limits**: Simulates and asserts that anonymous guests are strictly capped at 5 generations/day and authenticated users at 15 generations/day, checking that the rate limit middleware properly returns `429 Too Many Requests` when limits are breached.
   - **Input Pre-flight Rules**: Validates that prompt injections or invalid requests are blocked before calling the AI generation layer.
@@ -400,6 +406,6 @@ This section documents the current limitations of the implementation and outline
 
 ### 11. Flat Database Schema for Hierarchical Sketch Families
 
-- **Current Limitation:** The database only has one table called `sketches` to store everything. Because there are no separate tables for "Sketch Families" (projects) and "Versions" (drawings), the version tree hierarchy feels a bit messy. The data we save is also very minimal—we don't have user-friendly sketch names, only long UUID strings.
+- **Current Limitation:** The database only has one table called `sketches` to store everything. Because there are no separate tables for "Sketch Families" (projects) and "Versions" (drawings), the version tree hierarchy feels a bit messy. The data we save is also very minimal, meaning we don't have user-friendly sketch names, only long UUID strings.
 - **Impact:** The frontend has to maximize the display using only this minimal data (e.g., cutting the long UUID into short titles like `PANEL #83735fdc` and calculating version numbers like `V1` or `V2` on the fly by sorting dates in memory). This makes the sketchbook flow feel a bit weird because we don't have proper project names or custom labels.
 - **Production-Grade Solution:** Create a normalized database schema with a `sketch_families` table (to store project names, custom labels, description, and user_id) and a separate `sketch_versions` table (to store image_url, prompt, seed, styles, and parent_id relationship) linked via foreign keys.
