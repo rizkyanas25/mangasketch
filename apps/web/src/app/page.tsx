@@ -113,8 +113,7 @@ export default function Home() {
             IN SECONDS
           </h1>
           <p className='font-sans text-sm md:text-base text-neutral font-medium max-w-lg'>
-            Visualizer for mangaka. Sketch layouts, character designs, tonal ink
-            and screentone aesthetics.
+            AI manga panel generator for everyone. Turn your scene ideas into monochrome sketches, experiment with various drawing stages, and build your personal sketchbook.
           </p>
         </div>
 
@@ -187,7 +186,7 @@ export default function Home() {
               </h3>
               <p className='font-mono text-[10px] text-neutral uppercase'>
                 Your sketch will vanish when you leave this page. Login to keep
-                it forever.
+                it forever. It's FREE!
               </p>
             </div>
             <LoginButton />

@@ -220,7 +220,7 @@ export default function GenerateForm({
             {quota?.remaining ?? '...'} / {quota?.limit ?? '...'} SKETCHES
             {/* Tooltip */}
             {quota && (
-              <span className='absolute bottom-full mb-2 right-0 hidden group-hover/quota:block bg-background border-2 border-foreground p-2 text-[10px] text-foreground w-56 neo-shadow-sm z-30 normal-case font-medium font-mono text-left'>
+              <span className='absolute bottom-full mb-2 right-0 hidden group-hover/quota:block bg-background border-2 border-foreground p-2.5 text-[10px] text-foreground w-max max-w-[200px] sm:max-w-xs neo-shadow-sm z-30 normal-case font-medium font-mono text-left tracking-normal whitespace-normal'>
                 {quota?.limit === 15
                   ? 'Authenticated limit: 15 sketches/day.'
                   : 'Guest limit: 5 sketches/day.'}
