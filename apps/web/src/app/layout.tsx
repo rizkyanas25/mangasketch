@@ -25,32 +25,45 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MangaSketch — AI Manga Sketch & Concept Art Generator',
+  // 1. Base URL for resolving absolute paths of file-based metadata like opengraph-image.png
+  metadataBase: new URL('https://mangasketch.vercel.app'),
+
+  // 2. SEO Title: Main target keywords first for better Google ranking weight
+  title: 'AI Manga Panel & Sketch Generator Online — MangaSketch',
+
+  // 3. SEO Description: Matches the OG description perfectly
   description:
-    'Turn your manga storyboards, character ideas, and scene concepts into stylized black-and-white ink sketches in seconds. Built for mangakas and comic artists.',
+    'Turn your manga ideas and scene concepts into stylized black-and-white ink sketches in seconds. Anyone can easily start visualizing their stories for free.',
+
+  // 4. Target Keywords: Focused on search intent, excluding any screentone terms
   keywords: [
-    'manga',
-    'mangaka',
-    'sketch',
-    'AI image generator',
-    'concept art',
-    'storyboarding',
-    'ink drawings',
-    'screentone',
-    'anime art',
-    'layout visualizer',
+    'AI manga panel generator',
+    'manga sketch generator free',
+    'online manga storyboard creator',
+    'anime concept art generator',
+    'black and white ink drawing AI',
+    'mangaka digital assistant',
+    'manga visualizer tool',
+    'manga for everyone',
   ],
+
+  // 5. Open Graph Metadata (Social Platforms)
   openGraph: {
-    title: 'MangaSketch — AI Manga Sketch & Concept Art Generator',
+    title: 'MangaSketch — AI Manga Panel & Sketch Generator',
     description:
-      'An AI concept art assistant for mangakas and comic artists. Generate black & white manga storyboards, character sketches, and screentone panels instantly.',
+      'Turn your manga ideas and scene concepts into stylized black-and-white ink sketches in seconds. Anyone can easily start visualizing their stories for free.',
     type: 'website',
+    url: 'https://mangasketch.vercel.app',
+    siteName: 'MangaSketch',
+    locale: 'en_US',
   },
+
+  // 6. Twitter Card Metadata (X Platform)
   twitter: {
-    card: 'summary_large_image',
-    title: 'MangaSketch — AI Manga Sketch & Concept Art Generator',
+    card: 'summary_large_image', // Required to display the large banner image layout
+    title: 'MangaSketch — AI Manga Panel & Sketch Generator',
     description:
-      'Turn your manga storyboards, character ideas, and scene concepts into stylized black-and-white ink sketches in seconds.',
+      'Turn your manga ideas and scene concepts into stylized black-and-white ink sketches in seconds. Anyone can easily start visualizing their stories for free.',
   },
 };
 
