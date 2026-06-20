@@ -11,17 +11,17 @@ import {
 import { HankoStamp } from './HankoStamp';
 
 const MANGA_STYLE_IMAGES: Record<MangaStyle, string> = {
-  SHONEN: '/assets/styles/pill-shonen.png',
-  SEINEN: '/assets/styles/pill-seinen.png',
-  SHOJO: '/assets/styles/pill-shojo.png',
-  CHIBI: '/assets/styles/pill-chibi.png',
+  SHONEN: '/assets/styles/pill-shonen.webp',
+  SEINEN: '/assets/styles/pill-seinen.webp',
+  SHOJO: '/assets/styles/pill-shojo.webp',
+  CHIBI: '/assets/styles/pill-chibi.webp',
 };
 
 const DRAWING_STYLE_IMAGES: Record<DrawingStyle, string> = {
-  ROUGH_SKETCH: '/assets/styles/pill-rough.png',
-  CLEAN_LINE_ART: '/assets/styles/pill-clean.png',
-  INKED_MANGA: '/assets/styles/pill-inked.png',
-  ILLUSTRATION: '/assets/styles/pill-detailed.png',
+  ROUGH_SKETCH: '/assets/styles/pill-rough.webp',
+  CLEAN_LINE_ART: '/assets/styles/pill-clean.webp',
+  INKED_MANGA: '/assets/styles/pill-inked.webp',
+  ILLUSTRATION: '/assets/styles/pill-detailed.webp',
 };
 
 interface StyleSelectorProps {

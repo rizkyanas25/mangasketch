@@ -157,8 +157,9 @@ This section documents the actual engineering decisions made during development.
 - **Actual Decision:**
   - Built interactive grid selector buttons with transparent manga drawings as backgrounds.
   - Created a Python script to crop out black borders from raw AI images and mask grayscales into pure transparent ink PNGs (`alpha = 255 - gray`).
+  - Converted the final background images to WebP format, resized them from 1024x1024 down to 256x256, and optimized compression with 80% quality.
   - Added theme-aware CSS image filters to adapt the selector backgrounds dynamically to Light, Tankobon (sepia), and Midnight (dark) themes.
-- **Why:** Provides visual examples for style selections (Shonen, Seinen, Shojo, Chibi, etc.). Transparent alpha masking ensures background images adapt cleanly to the active theme without losing contrast or readability.
+- **Why:** Provides visual examples for style selections (Shonen, Seinen, Shojo, Chibi, etc.). Transparent alpha masking ensures background images adapt cleanly to the active theme without losing contrast or readability. The WebP conversion and resolution reduction slashed the total asset weight by 95% (from ~6.5MB to just ~310KB), eliminating initial loading lag on the style pills.
 
 ---
 
