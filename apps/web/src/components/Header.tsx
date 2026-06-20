@@ -8,8 +8,8 @@ import { useTheme } from '@/providers/ThemeProvider';
 import { FileSharp, BookOpenSharp, Moon, Notebook } from 'pixelarticons/react';
 import { useUiStore } from '@/store/uiStore';
 import { GoogleIcon } from '@/components/GoogleIcon';
-import { HankoStamp } from './HankoStamp';
 import { LoginButton } from './LoginButton';
+import { Logo } from './Logo';
 
 export default function Header() {
   const { user, loading, login, logout } = useAuth();
@@ -35,13 +35,12 @@ export default function Header() {
     <header className='relative sticky top-0 z-50 w-full bg-background border-b-4 border-foreground text-foreground transition-colors duration-200'>
       <div className='max-w-[1200px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between'>
         {/* Left Section: Brand Logo */}
-        <div className='flex items-center'>
+        <div className='flex items-center gap-10'>
           <Link
             href='/'
-            className='relative font-display text-2xl md:text-3xl tracking-wider hover:opacity-85 transition-opacity'
+            className='flex items-center hover:opacity-85 transition-opacity'
           >
-            <HankoStamp className='absolute -top-2.5 -right-7 w-10 h-10 z-0 opacity-90' />
-            <span className='relative z-10'>MANGASKETCH</span>
+            <Logo className='h-8 md:h-9 w-auto' />
           </Link>
         </div>
 
