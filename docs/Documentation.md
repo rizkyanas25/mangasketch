@@ -469,3 +469,10 @@ Here are the features I built that are not in the requirements:
 
 ### 8. Monospace Manga Speech-Bubble Tooltips
 * **Why built:** Instead of using boring default browser tooltips for long prompts, I styled absolute-positioned tooltips to look exactly like manga speech bubbles (monospaced font, thick flat borders, and a tiny pointing notch) to keep the comic book theme consistent down to the micro-details.
+
+### 9. Fully Automated Backend Test Suite (Vitest & Supertest) with Concurrency and Rate Limit Validation
+* **Why built:** The assignment specifies that the app must work correctly with multiple users generating at the same time and handle complex "messy" cases like concurrent load and rate limits. Rather than relying on manual browser clicking to guess if the concurrency works, I wrote a comprehensive automated testing suite (comprising 29 test cases) using **Vitest** and **Supertest** to mathematically prove the backend's robustness. The test suite mocks out slow network boundaries (like Pollinations.ai and Supabase Auth) to execute instantly, and asserts:
+  - **Thread-Safety & Concurrent Load**: Verifies that when multiple parallel/concurrent requests are fired, the server handles state changes and database actions safely without race conditions or memory leaks.
+  - **Quota Limits**: Simulates and asserts that anonymous guests are strictly capped at 5 generations/day and authenticated users at 15 generations/day, checking that the rate limit middleware properly returns `429 Too Many Requests` when limits are breached.
+  - **Input Pre-flight Rules**: Validates that prompt injections or invalid requests are blocked before calling the AI generation layer.
+  - **Asset Verification**: Checks that grayscale filters are correctly applied and watermark coordinates generate accurately.
