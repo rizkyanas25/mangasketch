@@ -84,7 +84,7 @@ function ConnectionSevered({ error }: { error: string }) {
           The ink has dried up. The server is not responding. Attempting to
           re-establish the signal.
         </p>
-        <p className='font-mono text-[10px] text-neutral/60 uppercase mt-2 max-w-xs'>
+        <p className='font-mono text-[10px] text-neutral/75 uppercase mt-2 max-w-xs'>
           {error}
         </p>
       </div>
@@ -125,7 +125,7 @@ function GenericError({ error }: { error: string }) {
           Every great manga starts with a prompt. Something went wrong with this
           one.
         </p>
-        <p className='font-mono text-[10px] text-neutral/60 uppercase mt-2 max-w-xs'>
+        <p className='font-mono text-[10px] text-neutral/75 uppercase mt-2 max-w-xs'>
           {error}
         </p>
       </div>
