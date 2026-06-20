@@ -2,6 +2,7 @@
 
 import React, { useRef, useActionState, useEffect } from 'react';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   MangaStyle,
   DrawingStyle,
@@ -23,6 +24,7 @@ export default function Home() {
   const setIsGenerating = useUiStore((state) => state.setIsGenerating);
   const showToast = useUiStore((state) => state.showToast);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const [state, formAction, isPending] = useActionState(generateSketchAction, {
     data: null,
@@ -37,8 +39,9 @@ export default function Home() {
   useEffect(() => {
     if (state.data?.imageUrl && user) {
       showToast('success', 'SKETCH SECURED! Saved to sketchbook.', true);
+      queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
     }
-  }, [state.data, user, showToast]);
+  }, [state.data, user, showToast, queryClient]);
 
   // Auto-scroll to canvas when generation starts (centered in viewport)
   useEffect(() => {

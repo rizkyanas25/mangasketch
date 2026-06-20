@@ -91,12 +91,10 @@ export default function SketchesPage() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('toast') === 'recovered') {
-      showToast('success', 'SKETCH SECURED! Saved to sketchbook.', true);
-      // Clean up parameter without reload
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+      showToast('success', 'PREVIOUS SKETCH RECOVERED!', false);
+      router.replace('/sketches', { scroll: false });
     }
-  }, [showToast]);
+  }, [showToast, router]);
 
   // React Query Fetching
   const {
