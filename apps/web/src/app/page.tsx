@@ -168,7 +168,7 @@ export default function Home() {
       </div>
 
       {/* 3. Anonymous CTA Banner (shown after successful generation, if not logged in) */}
-      {state.data?.imageUrl && !user && (
+      {state.data?.imageUrl && !user && !isPending && (
         <section className='bg-background border-4 border-foreground p-6 neo-shadow relative overflow-hidden'>
           <div className='absolute inset-0 bg-screentone pointer-events-none opacity-30' />
           <div className='relative z-10 flex flex-col md:flex-row items-center gap-4 md:gap-6'>
