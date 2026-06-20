@@ -396,37 +396,42 @@ This section documents the current limitations of the implementation and outline
 * **Impact:** Generations are stochastic by nature, meaning visual consistency cannot be 100% guaranteed across versions.
 * **Production-Grade Solution:** Integrate ControlNet line-art or Canny edge conditioning to use the previous version's image coordinates as a physical boundary.
 
-### 4. Third-Party API Dependency (No Uptime SLA)
+### 4. Pollinations.ai Model Style Adherence Limitations
+* **Current Limitation:** Even though we have crafted highly optimized, distinct prompt modifiers for each Manga Style (Shonen, Seinen, Shojo, Chibi) and Drawing Style (Rough Sketch, Clean Line Art, Inked Manga, Illustration) in `apps/server/src/utils/promptHelper.ts`, the default free models used (`flux` or `zimage`) show limited adherence to these specific artistic style changes. While `zimage`/`flux` can capture distinct manga styles reasonably well, they struggle to differentiate between drawing styles (e.g., distinguishing between a "Rough Sketch" with pencil construction lines and "Clean Line Art"). We experimented with more advanced models like `klein`, but due to high token/pollen consumption, we reverted to the more cost-effective `zimage`/`flux`.
+* **Impact:** The visual styles of generated panels might look somewhat similar or fail to fully reflect the selected drawing style (e.g., a "Rough Sketch" might look too clean, or "Illustration" might lack sufficient detail).
+* **Production-Grade Solution:** Integrate premium paid APIs (such as Midjourney, Stable Diffusion 3, or customized DALL-E 3 endpoints) that offer superior prompt-adherence, or train a custom LoRA model specifically on manga drawing styles (Rough, Inked, Clean, etc.) and deploy it to a dedicated GPU host.
+
+### 5. Third-Party API Dependency (No Uptime SLA)
 * **Current Limitation:** Using the free tier of Pollinations.ai has no service-level agreement (SLA) or guaranteed response times.
 * **Impact:** If the provider experiences traffic overload or server downtime, sketch generation will fail or timeout.
 * **Production-Grade Solution:** Setup a multi-provider fallback system (e.g., automatically switching to Gemini Flash or Replicate if the primary provider fails).
 
-### 5. In-Memory Rate Limiting
+### 6. In-Memory Rate Limiting
 * **Current Limitation:** The anonymous rate limiting (max 5 sketches/hour) is stored in the Node.js backend's runtime memory.
 * **Impact:** If the server container restarts or redeploys on Railway, all user generation counters reset.
 * **Production-Grade Solution:** Use a persistent distributed key-value store like Redis to manage rate-limit keys.
 
-### 6. LocalStorage Size Constraints for Guest Cache
+### 7. LocalStorage Size Constraints for Guest Cache
 * **Current Limitation:** Anonymous sketches are cached as raw base64 data URLs in `localStorage` to preserve them across login redirects.
 * **Impact:** Browser `localStorage` is restricted to ~5MB. Since a single base64 PNG sketch can consume 600KB - 1MB, guest users will hit browser storage limits if they try to save multiple temporary sketches before logging in.
 * **Production-Grade Solution:** Upload guest sketches to a temporary server storage folder and save only the temp ID in browser cookies.
 
-### 7. Orphaned File Risks on Database Transactions
+### 8. Orphaned File Risks on Database Transactions
 * **Current Limitation:** Deleting a sketch deletes the database records first and then triggers bulk file deletion in Supabase Storage.
 * **Impact:** If a network failure occurs after the database transaction commits but before the storage deletion resolves, physical files are orphaned in the cloud bucket.
 * **Production-Grade Solution:** Use distributed transaction patterns (saga pattern) or a background cron job that periodically audits and sweeps storage files without matching database records.
 
-### 8. Decoupled Authentication Failure Mode
+### 9. Decoupled Authentication Failure Mode
 * **Current Limitation:** Authentication is handled directly on the frontend using the Supabase Client SDK, while the custom Express backend only decodes and validates the Bearer JWT token in middleware.
 * **Impact:** If the Express backend server is offline or experiencing database connection errors, the frontend website still loads and the user can successfully sign in/out via Google OAuth (since Auth requests go directly through Supabase API servers). However, the logged-in user will be unable to generate sketches, view their sketchbook, or perform deletions, leading to a confusing UX where "login succeeds, but the application is non-functional."
 * **Production-Grade Solution:** Route all auth actions through backend session endpoints (e.g., Express-managed session cookies) or implement a client-side health-check ping to the Express server to show a "Server Offline" banner and disable interaction if the backend is unreachable.
 
-### 9. Storage CORS Dependency for Clientside PNG Reconstruction
+### 10. Storage CORS Dependency for Clientside PNG Reconstruction
 * **Current Limitation:** The frontend canvas-based WebP-to-PNG download reconstruction relies on fetching the image buffer via `fetch(imageUrl)` from Supabase Storage.
 * **Impact:** If the Supabase Storage bucket's CORS policy is misconfigured or lacks wildcard origin headers (`Access-Control-Allow-Origin: *`), the browser blocks the fetch request. The user is then forced to download the sketch via a fallback new-tab redirection, which serves the raw WebP file instead of the requested PNG.
 * **Production-Grade Solution:** Route image downloads through a custom proxy endpoint on the backend (e.g., `GET /api/sketches/:id/download`) which pulls the buffer server-side and streams it to the client with `Content-Disposition: attachment` headers, bypassing clientside CORS checks entirely.
 
-### 10. Flat Database Schema for Hierarchical Sketch Families
+### 11. Flat Database Schema for Hierarchical Sketch Families
 * **Current Limitation:** The database only has one table called `sketches` to store everything. Because there are no separate tables for "Sketch Families" (projects) and "Versions" (drawings), the version tree hierarchy feels a bit messy. The data we save is also very minimal—we don't have user-friendly sketch names, only long UUID strings.
 * **Impact:** The frontend has to maximize the display using only this minimal data (e.g., cutting the long UUID into short titles like `PANEL #83735fdc` and calculating version numbers like `V1` or `V2` on the fly by sorting dates in memory). This makes the sketchbook flow feel a bit weird because we don't have proper project names or custom labels.
 * **Production-Grade Solution:** Create a normalized database schema with a `sketch_families` table (to store project names, custom labels, description, and user_id) and a separate `sketch_versions` table (to store image_url, prompt, seed, styles, and parent_id relationship) linked via foreign keys.
