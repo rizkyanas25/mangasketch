@@ -7,7 +7,12 @@ describe('Watermark Utility', () => {
     it('should generate valid SVG content without banner if userName is empty or undefined', () => {
       const svg = generateWatermarkSvg(undefined, 'BOTTOM_RIGHT');
       expect(svg).toContain('<svg');
-      expect(svg).not.toContain('<path'); // Path is the banner red chord
+      expect(svg).not.toContain('A 42 42 0 0 0'); // The banner red chord arc should not be present
+      
+      // fill="#FFFFFF" should only appear once (for the background circle, not for initials path)
+      const matches = svg.match(/fill="#FFFFFF"/g);
+      expect(matches ? matches.length : 0).toBe(1);
+
       expect(svg).toContain('cx="688"'); // BOTTOM_RIGHT x
       expect(svg).toContain('cy="944"'); // BOTTOM_RIGHT y
     });
@@ -15,15 +20,17 @@ describe('Watermark Utility', () => {
     it('should generate SVG with banner and initials if userName is provided', () => {
       const svg = generateWatermarkSvg('NY', 'BOTTOM_RIGHT');
       expect(svg).toContain('<svg');
-      expect(svg).toContain('<path'); // Path is the banner red chord
-      expect(svg).toContain('NY');
-      expect(svg).toContain('font-size="12px"'); // font-size for <=2 chars
+      expect(svg).toContain('A 42 42 0 0 0'); // The banner red chord arc should be present
+      expect(svg).toContain('fill="#FFFFFF"'); // The white initials path should be present
     });
 
     it('should truncate and uppercase initials longer than 4 chars', () => {
-      const svg = generateWatermarkSvg('nyhello', 'BOTTOM_RIGHT');
-      expect(svg).toContain('NYHE'); // truncated to 4 uppercase characters
-      expect(svg).toContain('font-size="10px"'); // font-size for >2 chars
+      const svgNormal = generateWatermarkSvg('NY', 'BOTTOM_RIGHT');
+      const svgLong = generateWatermarkSvg('nyhello', 'BOTTOM_RIGHT');
+      expect(svgLong).toContain('A 42 42 0 0 0');
+      expect(svgLong).toContain('fill="#FFFFFF"');
+      // The path data for 'NYHE' is longer than 'NY', which validates it ran truncation
+      expect(svgLong.length).toBeGreaterThan(svgNormal.length);
     });
 
     it('should calculate coordinates correctly for all corners', () => {

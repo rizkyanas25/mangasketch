@@ -1,10 +1,42 @@
 import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+import opentype from 'opentype.js';
 import { WatermarkPosition } from '@mangasketch/shared';
-import { NOTO_SANS_JP_SUBSET_BASE64 } from './fonts/notoSansJP';
-import { IMPACT_SUBSET_BASE64 } from './fonts/impact';
+import { KATAKANA_PATHS } from './fonts/katakanaPaths';
+
+// Load and parse Impact font at startup
+let impactFont: opentype.Font | null = null;
+try {
+  const possiblePaths = [
+    path.join(__dirname, 'fonts', 'impact.ttf'),
+    path.join(__dirname, 'impact.ttf'),
+    path.join(process.cwd(), 'src', 'utils', 'fonts', 'impact.ttf'),
+    path.join(process.cwd(), 'apps', 'server', 'src', 'utils', 'fonts', 'impact.ttf'),
+    path.join(process.cwd(), 'dist', 'utils', 'fonts', 'impact.ttf'),
+    '/Users/rizkyanasbukhori/PlayWorks/mangasketch/scratch/impact.ttf',
+  ];
+  let fontPath = '';
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      fontPath = p;
+      break;
+    }
+  }
+  if (fontPath) {
+    const buffer = fs.readFileSync(fontPath);
+    const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+    impactFont = opentype.parse(arrayBuffer);
+    console.log(`Successfully loaded Impact font from: ${fontPath}`);
+  } else {
+    console.error('Impact font file not found in any of the resolved paths.');
+  }
+} catch (err) {
+  console.error('Failed to load Impact font in watermark helper:', err);
+}
 
 /**
- * Dynamically generates the SVG string for the Hanko Stamp watermark overlay.
+ * Dynamically generates the SVG string for the Hanko Stamp watermark overlay using vector paths.
  * @param userName Optional user name/initials (1-4 characters)
  * @param position Placement corner
  * @returns SVG XML string
@@ -46,92 +78,91 @@ export function generateWatermarkSvg(userName: string | undefined, position: Wat
   let katakanaSvg = '';
   let bannerSvg = '';
 
+  // Function to render static Katakana path centered at (x, y) with a given fontSize
+  function renderKatakana(char: string, x: number, y: number, fontSize: number): string {
+    const scale = fontSize / 1000;
+    const charInfo = KATAKANA_PATHS[char];
+    if (!charInfo) return '';
+    const shiftX = x - charInfo.centerX * scale;
+    const shiftY = y;
+    return `<path d="${charInfo.d}" transform="translate(${shiftX.toFixed(2)}, ${shiftY.toFixed(2)}) scale(${scale.toFixed(4)})" fill="${strokeColor}" />`;
+  }
+
   if (hasText) {
     // --- Case 1: With Username Banner ---
-    // Katakana font sizes bumped from 14/12 to 16/13 for better readability
-    const userFontSize = cleanName.length <= 2 ? '12px' : '10px';
+    // Left column: ス ケ ッ チ (fontSize = 13px)
+    // Right column: マ ン ガ (fontSize = 16px)
+    katakanaSvg = `
+      <!-- Right Column: マ ン ガ -->
+      ${renderKatakana('マ', cx + 10, cy - 16, 16)}
+      ${renderKatakana('ン', cx + 10, cy - 16 + 14, 16)}
+      ${renderKatakana('ガ', cx + 10, cy - 16 + 28, 16)}
+      
+      <!-- Left Column: ス ケ ッ チ -->
+      ${renderKatakana('ス', cx - 10, cy - 19, 13)}
+      ${renderKatakana('ケ', cx - 10, cy - 19 + 12, 13)}
+      ${renderKatakana('ッ', cx - 10, cy - 19 + 22, 13)}
+      ${renderKatakana('チ', cx - 10, cy - 19 + 34, 13)}
+    `;
+
+    // Dynamic initials rendering using opentype.js
+    const fontScale = cleanName.length <= 2 ? 12 : 10;
+    let initialsPathData = '';
     
-    // Banner chord geometry: offset 22px below center gives a taller segment
+    if (impactFont) {
+      // Center the text horizontally at cx
+      const textWidth = impactFont.getAdvanceWidth(cleanName, fontScale);
+      const startX = cx - textWidth / 2;
+      const yBaseline = cy + 36;
+      
+      const initialsPath = impactFont.getPath(cleanName, startX, yBaseline, fontScale);
+      initialsPathData = initialsPath.toPathData(2);
+    }
+
     const chordOffset = 22;
-    const halfChord = Math.sqrt(42 * 42 - chordOffset * chordOffset); // ≈ 35.8
+    const halfChord = Math.sqrt(42 * 42 - chordOffset * chordOffset);
     const x1 = cx - halfChord;
     const x2 = cx + halfChord;
     const yChord = cy + chordOffset;
 
-    katakanaSvg = `
-      <!-- Right Column: マ ン ガ (16px, vertically centered above banner) -->
-      <text x="${cx + 10}" y="${cy - 16}" fill="${strokeColor}" font-family="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif" font-weight="900" font-size="16px" text-anchor="middle" letter-spacing="-0.5px">
-        マ
-        <tspan x="${cx + 10}" dy="14">ン</tspan>
-        <tspan x="${cx + 10}" dy="14">ガ</tspan>
-      </text>
-      
-      <!-- Left Column: ス ケ ッ チ (13px, vertically centered above banner) -->
-      <text x="${cx - 10}" y="${cy - 19}" fill="${strokeColor}" font-family="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif" font-weight="900" font-size="13px" text-anchor="middle" letter-spacing="-0.5px">
-        ス
-        <tspan x="${cx - 10}" dy="12">ケ</tspan>
-        <tspan x="${cx - 10}" dy="10">ッ</tspan>
-        <tspan x="${cx - 10}" dy="12">チ</tspan>
-      </text>
-    `;
-
     bannerSvg = `
-      <!-- Bottom Red Segment Banner (taller segment for better text fit) -->
+      <!-- Bottom Red Segment Banner -->
       <path d="M ${x1} ${yChord} A 42 42 0 0 0 ${x2} ${yChord} Z" fill="${strokeColor}" />
       
-      <!-- User initials/short name (centered in segment) -->
-      <text x="${cx}" y="${cy + 36}" fill="#FFFFFF" font-family="'Impact', 'Arial Black', sans-serif" font-size="${userFontSize}" font-weight="bold" letter-spacing="0.5" text-anchor="middle">
-        ${cleanName}
-      </text>
+      <!-- User initials/short name (drawn as path) -->
+      ${initialsPathData ? `<path d="${initialsPathData}" fill="#FFFFFF" />` : ''}
     `;
   } else {
-    // --- Case 2: Without Username Banner (Katakana truly centered in full circle) ---
+    // --- Case 2: Without Username Banner (Katakana centered in full circle) ---
+    // Right column: マ ン ガ (fontSize = 17px)
+    // Left column: ス ケ ッ チ (fontSize = 15px)
     katakanaSvg = `
-      <!-- Right Column: マ ン ガ (17px, vertically centered in circle) -->
-      <text x="${cx + 10}" y="${cy - 10}" fill="${strokeColor}" font-family="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif" font-weight="900" font-size="17px" text-anchor="middle" letter-spacing="-0.5px">
-        マ
-        <tspan x="${cx + 10}" dy="16">ン</tspan>
-        <tspan x="${cx + 10}" dy="16">ガ</tspan>
-      </text>
+      <!-- Right Column: マ ン ガ -->
+      ${renderKatakana('マ', cx + 10, cy - 10, 17)}
+      ${renderKatakana('ン', cx + 10, cy - 10 + 16, 17)}
+      ${renderKatakana('ガ', cx + 10, cy - 10 + 32, 17)}
       
-      <!-- Left Column: ス ケ ッ チ (15px, vertically centered in circle) -->
-      <text x="${cx - 10}" y="${cy - 14}" fill="${strokeColor}" font-family="'Noto Sans JP', 'Helvetica Neue', 'Arial Black', sans-serif" font-weight="900" font-size="15px" text-anchor="middle" letter-spacing="-0.5px">
-        ス
-        <tspan x="${cx - 10}" dy="14">ケ</tspan>
-        <tspan x="${cx - 10}" dy="11">ッ</tspan>
-        <tspan x="${cx - 10}" dy="14">チ</tspan>
-      </text>
+      <!-- Left Column: ス ケ ッ チ -->
+      ${renderKatakana('ス', cx - 10, cy - 14, 15)}
+      ${renderKatakana('ケ', cx - 10, cy - 14 + 14, 15)}
+      ${renderKatakana('ッ', cx - 10, cy - 14 + 28, 15)}
+      ${renderKatakana('チ', cx - 10, cy - 14 + 42, 15)}
     `;
-    
-    bannerSvg = ''; // No bottom banner
+    bannerSvg = '';
   }
 
   return `
     <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <style>
-          @font-face {
-            font-family: 'Noto Sans JP';
-            src: url('data:font/woff2;charset=utf-8;base64,${NOTO_SANS_JP_SUBSET_BASE64}') format('woff2');
-            font-weight: 900;
-          }
-          @font-face {
-            font-family: 'Impact';
-            src: url('data:font/woff2;charset=utf-8;base64,${IMPACT_SUBSET_BASE64}') format('woff2');
-            font-weight: bold;
-          }
-        </style>
-      </defs>
       <!-- 1. White Solid background to cover/mask AI signature underneath -->
       <circle cx="${cx}" cy="${cy}" r="42" fill="${circleFill}" />
       
       <!-- 2. Red Outer Circle Border -->
       <circle cx="${cx}" cy="${cy}" r="42" fill="none" stroke="${strokeColor}" stroke-width="4.5" />
       
-      <!-- 3. Vertical Katakana (マンガスケッチ) in center -->
+      <!-- 3. Vertical Katakana (Rendered as paths) -->
       ${katakanaSvg}
       
-      <!-- 4. Optional Bottom Banner & Username -->
+      <!-- 4. Optional Bottom Banner & Username (Rendered as paths) -->
       ${bannerSvg}
     </svg>
   `;
