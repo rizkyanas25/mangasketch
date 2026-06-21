@@ -221,19 +221,29 @@ export default function GenerateForm({
       <div className='flex items-center gap-2 font-mono text-xs border-2 border-foreground p-3 bg-background relative group/quota cursor-help'>
         <span className='font-bold flex-1 flex flex-wrap justify-between items-center gap-x-2 gap-y-1 select-none'>
           <span>REMAINING INK:</span>
-          <span className='text-destructive font-mono font-bold tracking-wider sm:tracking-widest relative'>
-            {quota?.remaining ?? '...'} / {quota?.limit ?? '...'} SKETCHES
-            {/* Tooltip */}
-            {quota && (
-              <span className='absolute bottom-full mb-2 right-0 hidden group-hover/quota:block bg-background border-2 border-foreground p-2.5 text-[10px] text-foreground w-max max-w-[200px] sm:max-w-xs neo-shadow-sm z-30 normal-case font-medium font-mono text-left tracking-normal whitespace-normal'>
-                {quota?.limit === 15
-                  ? 'Authenticated limit: 15 sketches/day.'
-                  : 'Guest limit: 5 sketches/day.'}
-                <br />
-                Quota resets daily.
+          {quotaError ? (
+            <span className='text-destructive font-mono font-bold uppercase relative group/quota-error'>
+              INK SUPPLY STATUS UNKNOWN
+              {/* Error Tooltip */}
+              <span className='absolute bottom-full mb-2 right-0 hidden group-hover/quota-error:block bg-background border-2 border-foreground p-2.5 text-[10px] text-foreground w-max max-w-[200px] sm:max-w-xs neo-shadow-sm z-30 normal-case font-medium font-mono text-left tracking-normal whitespace-normal'>
+                Connection severed. Could not fetch your daily sketch quota from the server.
               </span>
-            )}
-          </span>
+            </span>
+          ) : (
+            <span className='text-destructive font-mono font-bold tracking-wider sm:tracking-widest relative'>
+              {quota?.remaining ?? '...'} / {quota?.limit ?? '...'} SKETCHES
+              {/* Tooltip */}
+              {quota && (
+                <span className='absolute bottom-full mb-2 right-0 hidden group-hover/quota:block bg-background border-2 border-foreground p-2.5 text-[10px] text-foreground w-max max-w-[200px] sm:max-w-xs neo-shadow-sm z-30 normal-case font-medium font-mono text-left tracking-normal whitespace-normal'>
+                  {quota?.limit === 15
+                    ? 'Authenticated limit: 15 sketches/day.'
+                    : 'Guest limit: 5 sketches/day.'}
+                  <br />
+                  Quota resets daily.
+                </span>
+              )}
+            </span>
+          )}
         </span>
       </div>
 

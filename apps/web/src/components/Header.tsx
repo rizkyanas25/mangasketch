@@ -25,7 +25,7 @@ export default function Header() {
 
   const themes = [
     { id: 'light', name: 'Light Ink', icon: FileSharp },
-    { id: 'tankobon', name: 'Recycled Book', icon: BookOpenSharp },
+    { id: 'tankobon', name: 'Tankobon', icon: BookOpenSharp },
     { id: 'midnight', name: 'Midnight Moon', icon: Moon },
   ] as const;
 
@@ -64,24 +64,28 @@ export default function Header() {
           {/* Neo-Brutalist Pixel Art Theme Switcher */}
           <div className='flex border-2 border-foreground divide-x-2 divide-foreground neo-shadow-sm'>
             {themes.map(({ id, name, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setTheme(id)}
-                title={`Switch to ${name} mode`}
-                className={`p-1.5 cursor-pointer transition-colors duration-150 group ${
-                  theme === id
-                    ? 'bg-foreground text-background'
-                    : 'bg-background text-foreground'
-                }`}
-              >
-                <Icon
-                  className={`w-5 h-5 transition-transform duration-150 ${
+              <div key={id} className='relative group/theme-btn'>
+                <button
+                  onClick={() => setTheme(id)}
+                  className={`p-1.5 cursor-pointer transition-colors duration-150 group/theme-icon flex items-center justify-center ${
                     theme === id
-                      ? 'scale-110'
-                      : 'scale-100 group-hover:scale-110'
+                      ? 'bg-foreground text-background'
+                      : 'bg-background text-foreground hover:bg-screentone'
                   }`}
-                />
-              </button>
+                >
+                  <Icon
+                    className={`w-5 h-5 transition-transform duration-150 ${
+                      theme === id
+                        ? 'scale-110'
+                        : 'scale-100 group-hover/theme-icon:scale-110'
+                    }`}
+                  />
+                </button>
+                {/* Custom Neobrutalist Tooltip */}
+                <div className='absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/theme-btn:block bg-background border-2 border-foreground p-1.5 text-[10px] font-mono text-foreground neo-shadow-sm z-50 whitespace-nowrap pointer-events-none'>
+                  {name} Mode
+                </div>
+              </div>
             ))}
           </div>
 
