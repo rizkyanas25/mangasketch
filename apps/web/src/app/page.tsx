@@ -34,19 +34,21 @@ export default function Home() {
   const wasPending = useRef(isPending);
   useEffect(() => {
     setIsGenerating(isPending);
-    if (wasPending.current && !isPending) {
-      queryClient.invalidateQueries({ queryKey: ['quota'] });
-    }
     wasPending.current = isPending;
-  }, [isPending, setIsGenerating, queryClient]);
+  }, [isPending, setIsGenerating]);
 
-  // Trigger global success toast when sketch is successfully generated (only for logged-in/auth users)
+  // Trigger global success toast & refresh data when sketch is successfully generated
   useEffect(() => {
-    if (state.data?.imageUrl && user) {
-      showToast('success', 'SKETCH SECURED! Saved to sketchbook.', true);
-      queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
+    if (state.data?.imageUrl) {
+      // Invalidate quota for both guest and auth users on successful generation
+      queryClient.invalidateQueries({ queryKey: ['quota'] });
+
+      if (user) {
+        showToast('success', 'SKETCH SECURED! Saved to sketchbook.', true);
+        queryClient.invalidateQueries({ queryKey: ['sketches', user?.id] });
+      }
     }
-  }, [state.data, user, showToast, queryClient]);
+  }, [state.data?.imageUrl, user, showToast, queryClient]);
 
   // Auto-scroll to canvas when generation starts (centered in viewport)
   useEffect(() => {
@@ -140,6 +142,14 @@ export default function Home() {
         {/* Left: Input Form Panel */}
         <GenerateForm
           mode='create'
+          sketch={state.data ? {
+            id: state.data.id,
+            prompt: state.data.prompt,
+            manga_style: state.data.mangaStyle,
+            drawing_style: state.data.drawingStyle,
+            image_url: state.data.imageUrl,
+            seed: state.data.seed,
+          } as any : null}
           isGenerating={isPending}
           hasExistingImage={!!state.data?.imageUrl}
           onSubmit={handleGenerateSubmit}

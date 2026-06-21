@@ -63,14 +63,7 @@ export default function GenerateForm({
     }
   }, [quotaError, showToast]);
 
-  // Track isGenerating transition to invalidate quota query
-  const wasGenerating = useRef(isGenerating);
-  useEffect(() => {
-    if (wasGenerating.current && !isGenerating) {
-      queryClient.invalidateQueries({ queryKey: ['quota'] });
-    }
-    wasGenerating.current = isGenerating;
-  }, [isGenerating, queryClient]);
+
   // Initialize state directly from the sketch prop if available, or default based on mode
   const [prompt, setPrompt] = useState(sketch?.prompt || '');
   const [mangaStyle, setMangaStyle] = useState<MangaStyle | null>(() => {
@@ -86,17 +79,21 @@ export default function GenerateForm({
     useState<WatermarkPosition>('BOTTOM_RIGHT');
   const [lockSeed, setLockSeed] = useState(false);
 
-  const isPromptChanged =
-    mode === 'edit' && !!sketch && prompt !== sketch.prompt;
-  const isMangaStyleChanged =
-    mode === 'edit' && !!sketch && mangaStyle !== sketch.manga_style;
-  const isDrawingStyleChanged =
-    mode === 'edit' && !!sketch && drawingStyle !== sketch.drawing_style;
-  const hasChanges =
-    mode === 'create' ||
-    isPromptChanged ||
-    isMangaStyleChanged ||
-    isDrawingStyleChanged;
+  // Sync form states with the active sketch prop when it changes (e.g. on mount, version switch, or generation complete)
+  useEffect(() => {
+    if (sketch) {
+      setPrompt(sketch.prompt);
+      setMangaStyle(sketch.manga_style as MangaStyle);
+      setDrawingStyle(sketch.drawing_style as DrawingStyle);
+    }
+  }, [sketch?.image_url, sketch?.prompt]);
+
+  const isPromptChanged = !!sketch && prompt.trim().toLowerCase() !== sketch.prompt.trim().toLowerCase();
+  const isMangaStyleChanged = !!sketch && mangaStyle !== sketch.manga_style;
+  const isDrawingStyleChanged = !!sketch && drawingStyle !== sketch.drawing_style;
+  
+  // If there's no previous sketch, we always have changes. If there is, at least one parameter must differ.
+  const hasChanges = !sketch || isPromptChanged || isMangaStyleChanged || isDrawingStyleChanged;
 
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= 500) {
@@ -112,7 +109,7 @@ export default function GenerateForm({
       !prompt.trim() ||
       !mangaStyle ||
       !drawingStyle ||
-      (mode === 'edit' && !hasChanges)
+      !hasChanges
     )
       return;
 
@@ -132,14 +129,16 @@ export default function GenerateForm({
     !prompt.trim() ||
     !mangaStyle ||
     !drawingStyle ||
-    (mode === 'edit' && !hasChanges);
+    !hasChanges;
 
   // Determine button text
   let buttonText = 'SKETCH THIS IDEA';
   if (isPageLoading || isGenerating) {
     buttonText = 'LOADING SKETCH';
+  } else if (!hasChanges) {
+    buttonText = 'NO CHANGES DETECTED';
   } else if (mode === 'edit') {
-    buttonText = hasChanges ? 'SKETCH NEW VERSION' : 'NO CHANGES DETECTED';
+    buttonText = 'SKETCH NEW VERSION';
   } else if (hasExistingImage) {
     buttonText = 'SKETCH A NEW IDEA';
   }
