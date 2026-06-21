@@ -260,6 +260,24 @@ main {
   );
 }
 
+/* Vertical tension lines (tate-sen) for shock/error screens */
+.manga-tension-vertical {
+  position: relative;
+}
+
+.manga-tension-vertical::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px 12px,
+    var(--foreground) 12px 13px
+  );
+  opacity: 0.05;
+  pointer-events: none;
+}
+
 /* Slow pulse for dramatic text */
 @keyframes pulse-slow {
   0%,

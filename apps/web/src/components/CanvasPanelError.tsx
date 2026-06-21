@@ -85,7 +85,7 @@ function InkDepleted({ error }: { error: string }) {
   }, []);
 
   return (
-    <div className='manga-speedlines relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden bg-background'>
+    <div className='manga-tension-vertical relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden bg-background'>
       {/* Screentone pattern overlay (10% opacity for comic newsprint vibe) */}
       <div className='absolute inset-0 bg-screentone pointer-events-none opacity-10' />
 
@@ -120,7 +120,7 @@ function InkDepleted({ error }: { error: string }) {
 
 function ConnectionSevered({ error }: { error: string }) {
   return (
-    <div className='manga-speedlines manga-speedlines-dense relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden'>
+    <div className='manga-tension-vertical relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden'>
       <div className='relative z-10 flex flex-col items-center'>
         <Unlink className='w-16 h-16 mb-4 text-[#D9383A]' />
         <h2 className='font-display text-3xl md:text-4xl tracking-wide uppercase mb-3'>
@@ -161,7 +161,7 @@ function DataCorruption({ error }: { error: string }) {
 
 function GenericError({ error }: { error: string }) {
   return (
-    <div className='manga-speedlines relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden'>
+    <div className='manga-tension-vertical relative flex flex-col items-center justify-center text-center p-8 h-full min-h-[350px] w-full overflow-hidden'>
       <div className='relative z-10 flex flex-col items-center'>
         <WarningDiamond className='w-16 h-16 mb-4 text-[#D9383A]' />
         <h2 className='font-display text-3xl md:text-4xl tracking-wide uppercase mb-3'>
