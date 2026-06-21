@@ -185,7 +185,7 @@ export default function Home() {
                 SAVE THIS TO YOUR SKETCHBOOK
               </h3>
               <p className='font-mono text-[10px] text-neutral uppercase'>
-                Your sketch will vanish when you leave this page. Login to keep
+                Your sketch will vanish when you leave this page. Sign in to keep
                 it forever. It's FREE!
               </p>
             </div>

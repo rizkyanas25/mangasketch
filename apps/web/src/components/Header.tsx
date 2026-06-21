@@ -137,7 +137,13 @@ export default function Header() {
               )}
             </div>
           ) : (
-            <LoginButton isOnHeader={true} disabled={isGenerating} />
+            <div className='relative group/login-btn'>
+              <LoginButton isOnHeader={true} disabled={isGenerating} />
+              {/* Custom Neobrutalist Tooltip */}
+              <div className='absolute top-full right-0 mt-2 hidden group-hover/login-btn:block bg-background border-2 border-foreground p-2.5 text-[10px] font-mono text-foreground neo-shadow-sm z-50 w-64 text-left normal-case pointer-events-none leading-snug'>
+                Get more of your ink! Sign in with Google to unlock your personal Sketchbook and save creations permanently for free.
+              </div>
+            </div>
           )}
         </div>
       </div>

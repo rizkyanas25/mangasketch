@@ -25,7 +25,7 @@ export function LoginButton({
       }`}
     >
       <GoogleIcon className='w-5 h-5 flex-shrink-0' />
-      <span className={isOnHeader ? 'hidden sm:inline' : 'inline'}>LOGIN</span>
+      <span className={isOnHeader ? 'hidden sm:inline' : 'inline'}>SIGN IN</span>
     </button>
   );
 }
