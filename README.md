@@ -10,7 +10,7 @@
 
 **Turn your manga ideas into visual concepts in seconds.**
 
-[Live Demo](#) • [Documentation](./docs/Documentation.md)
+[Live Demo](https://mangasketch.vercel.app) • [Documentation](./docs/Documentation.md)
 
 </div>
 
@@ -111,6 +111,7 @@ mangasketch/
 | `GET` | `/api/sketches` | Required | List user's sketches |
 | `GET` | `/api/sketches/:id` | Required | Get single sketch detail & version history |
 | `DELETE` | `/api/sketches/:id` | Required | Delete a sketch |
+| `GET` | `/api/sketches/quota` | Optional | Retrieve current user's daily ink quota |
 
 ---
 
@@ -127,6 +128,7 @@ See [.env.example](.env.example) for all required variables.
 | `GEMINI_API_KEY` | Gemini API key (if using Gemini as provider) |
 | `PORT` | Backend server port (default: 3001) |
 | `FRONTEND_URL` | Frontend URL for CORS (default: http://localhost:3000) |
+| `DEBUG_HTTP` | Enable verbose HTTP request/response body logging in backend (default: false) |
 
 ---
 
@@ -137,6 +139,7 @@ See [.env.example](.env.example) for all required variables.
 | `npm run dev` | Start both frontend and backend |
 | `npm run dev:web` | Start frontend only |
 | `npm run dev:server` | Start backend only |
+| `npm run test` | Run backend automated test suite (Vitest & Supertest) |
 
 ---
 
