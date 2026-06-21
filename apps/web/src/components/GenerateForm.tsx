@@ -43,10 +43,15 @@ export default function GenerateForm({
   const queryClient = useQueryClient();
   const showToast = useUiStore((state) => state.showToast);
 
-  // Fetch current daily quota status directly inside the form using Next.js Server Action
   const { data: quota, error: quotaError } = useQuery<GetQuotaResponse>({
     queryKey: ['quota', user?.id],
-    queryFn: () => getQuotaAction(session?.access_token || undefined),
+    queryFn: async () => {
+      const res = await getQuotaAction(session?.access_token || undefined);
+      if (res.error) {
+        throw new Error(res.error);
+      }
+      return res.data!;
+    },
     refetchOnWindowFocus: true,
     retry: 1,
   });

@@ -83,8 +83,27 @@ export async function apiFetch<T>(
     try {
       errorData = await response.json();
     } catch {
-      errorData = { message: 'An unknown network error occurred.' };
+      try {
+        const text = await response.text();
+        errorData = { message: text };
+      } catch {
+        errorData = { message: 'An unknown network error occurred.' };
+      }
     }
+
+    // Check if the error is from Railway/Render proxy (e.g. application offline/not found)
+    const isProxyOffline =
+      response.status === 404 &&
+      errorData.message &&
+      (errorData.message.toLowerCase().includes('application not found') ||
+        errorData.message.toLowerCase().includes('deployment not found') ||
+        errorData.message.toLowerCase().includes('not found') ||
+        errorData.message.toLowerCase().includes('unreachable'));
+
+    if (isProxyOffline || response.status === 502 || response.status === 503) {
+      throw new Error('CONNECTION ERROR: SERVER UNREACHABLE. PLEASE TRY AGAIN LATER.');
+    }
+
     throw new ApiError(
       errorData.message || 'Request failed',
       response.status,

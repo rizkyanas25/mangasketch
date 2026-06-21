@@ -83,44 +83,65 @@ export async function deleteSketchAction(
 
 export async function getQuotaAction(
   token?: string,
-): Promise<GetQuotaResponse> {
+): Promise<{ data: GetQuotaResponse | null; error: string | null }> {
   const headers: Record<string, string> = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return apiFetch<GetQuotaResponse>('/api/sketches/quota', {
-    method: 'GET',
-    headers,
-    cache: 'no-store',
-  });
+  try {
+    const data = await apiFetch<GetQuotaResponse>('/api/sketches/quota', {
+      method: 'GET',
+      headers,
+      cache: 'no-store',
+    });
+    return { data, error: null };
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error ? err.message : 'An unknown network error occurred.';
+    return { data: null, error: errorMsg };
+  }
 }
 
 export async function getSketchesAction(
   token?: string,
-): Promise<GetSketchesResponse> {
+): Promise<{ data: GetSketchesResponse | null; error: string | null }> {
   const headers: Record<string, string> = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return apiFetch<GetSketchesResponse>('/api/sketches', {
-    method: 'GET',
-    headers,
-  });
+  try {
+    const data = await apiFetch<GetSketchesResponse>('/api/sketches', {
+      method: 'GET',
+      headers,
+    });
+    return { data, error: null };
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error ? err.message : 'An unknown network error occurred.';
+    return { data: null, error: errorMsg };
+  }
 }
 
 export async function getSketchDetailAction(
   sketchId: string,
   token?: string,
-): Promise<GetSketchDetailResponse> {
+): Promise<{ data: GetSketchDetailResponse | null; error: string | null }> {
   const headers: Record<string, string> = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return apiFetch<GetSketchDetailResponse>(`/api/sketches/${sketchId}`, {
-    method: 'GET',
-    headers,
-  });
+  try {
+    const data = await apiFetch<GetSketchDetailResponse>(`/api/sketches/${sketchId}`, {
+      method: 'GET',
+      headers,
+    });
+    return { data, error: null };
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error ? err.message : 'An unknown network error occurred.';
+    return { data: null, error: errorMsg };
+  }
 }

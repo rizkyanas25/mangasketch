@@ -106,7 +106,11 @@ export default function SketchesPage() {
     queryKey: ['sketches', user?.id],
     queryFn: async (): Promise<GetSketchesResponse> => {
       if (!session?.access_token) return { sketches: [] };
-      return getSketchesAction(session.access_token);
+      const res = await getSketchesAction(session.access_token);
+      if (res.error) {
+        throw new Error(res.error);
+      }
+      return res.data!;
     },
     enabled: !!session?.access_token,
   });
