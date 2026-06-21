@@ -78,15 +78,18 @@ export default function GenerateForm({
   const [watermarkPosition, setWatermarkPosition] =
     useState<WatermarkPosition>('BOTTOM_RIGHT');
   const [lockSeed, setLockSeed] = useState(false);
+  const [prevSketchUrl, setPrevSketchUrl] = useState<string | null>(null);
 
   // Sync form states with the active sketch prop when it changes (e.g. on mount, version switch, or generation complete)
-  useEffect(() => {
+  const currentSketchUrl = sketch?.image_url || null;
+  if (currentSketchUrl !== prevSketchUrl) {
+    setPrevSketchUrl(currentSketchUrl);
     if (sketch) {
       setPrompt(sketch.prompt);
       setMangaStyle(sketch.manga_style as MangaStyle);
       setDrawingStyle(sketch.drawing_style as DrawingStyle);
     }
-  }, [sketch?.image_url, sketch?.prompt]);
+  }
 
   const isPromptChanged = !!sketch && prompt.trim().toLowerCase() !== sketch.prompt.trim().toLowerCase();
   const isMangaStyleChanged = !!sketch && mangaStyle !== sketch.manga_style;
