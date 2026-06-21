@@ -86,7 +86,7 @@ export function httpLoggingMiddleware(req: Request, res: Response, next: NextFun
 
     // 3. Print clean aggregated HTTP transaction log to stdout (Railway Deploy Logs)
     // Only log API endpoints to keep static assets/other logs clean
-    if (req.path.startsWith('/api')) {
+    if (req.originalUrl.startsWith('/api')) {
       console.log(
         `[API_DEBUG] ${req.method} ${req.originalUrl} | Status: ${res.statusCode} | ${responseTime}ms${queryStr}\n` +
         `  ↳ Req Body: ${reqBody}\n` +
